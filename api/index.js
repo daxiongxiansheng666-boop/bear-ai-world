@@ -271,19 +271,27 @@ module.exports = async (req, res) => {
         const client = new Client({ connectionString: url });
         await client.connect();
         
-        // 测试登录查询（分两步）
         const r = await client.query('SELECT * FROM users WHERE email = $1', ['834202715@qq.com']);
         
         await client.end();
         return res.json({ 
           success: true, 
           dbConnected: true,
-          usersFound: r.rows.length,
           userData: r.rows
         });
       } catch (e) {
         return res.json({ success: true, dbConnected: false, error: e.message });
       }
+    }
+
+    // ========== Test POST ==========
+    if (pathname === 'test-post' && method === 'POST') {
+      return res.json({ 
+        success: true, 
+        receivedData: data,
+        rawDataCheck: data?.email,
+        rawPasswordCheck: data?.password ? 'HAS_VALUE' : 'EMPTY'
+      });
     }
 
     return res.status(404).json({ success: false, message: 'API不存在' });
