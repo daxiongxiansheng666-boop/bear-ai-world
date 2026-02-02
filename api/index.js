@@ -104,12 +104,24 @@ module.exports = async (req, res) => {
   try {
     let data = {};
     
-    // 只读取一次请求体
+    // 尝试多种方式读取请求体
     if (method !== 'GET' && method !== 'HEAD') {
       try {
-        const raw = await req.text();
-        if (raw) data = JSON.parse(raw);
-      } catch (e) {}
+        // 方法1: text()
+        let raw = await req.text();
+        if (raw) {
+          data = JSON.parse(raw);
+        } else {
+          // 方法2: arrayBuffer()
+          const buffer = await req.arrayBuffer();
+          if (buffer && buffer.byteLength > 0) {
+            raw = new TextDecoder().decode(buffer);
+            data = JSON.parse(raw);
+          }
+        }
+      } catch (e) {
+        console.log('Body parse error:', e.message);
+      }
     }
 
     const authHeader = req.headers.authorization;
