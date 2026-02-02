@@ -114,22 +114,19 @@ module.exports = async (req, res) => {
 
     // ========== Auth ==========
     if (pathname === 'auth/login' && method === 'POST') {
-      console.log('登录请求:', data.email, '数据库配置:', isDbConfigured());
-      
       // 数据库模式
       if (isDbConfigured()) {
         try {
-          console.log('尝试数据库查询...');
           const result = await queryDb('SELECT * FROM users WHERE email = $1 AND password = $2', [data.email, data.password]);
-          console.log('数据库查询结果:', result.rows.length);
           if (result.rows.length > 0) {
             const foundUser = result.rows[0];
             return res.json({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
           }
         } catch (e) {
-          console.log('数据库查询失败:', e.message);
+          // 静默失败，回退到内存模式
         }
       }
+      
       // 内存模式
       const foundUser = memoryDb.users.find(u => u.email === data.email && u.password === data.password);
       if (foundUser) {
@@ -252,13 +249,16 @@ module.exports = async (req, res) => {
         const url = process.env.POSTGRES_URL || process.env.DATABASE_URL || process.env.PRISMA_DATABASE_URL;
         const client = new Client({ connectionString: url.replace('prisma+postgres://', 'postgres://') });
         await client.connect();
-        const r = await client.query('SELECT COUNT(*) as count FROM users');
+        
+        // 测试登录查询
+        const r = await client.query('SELECT * FROM users WHERE email = $1 AND password = $2', ['834202715@qq.com', 'sv834202715']);
+        
         await client.end();
         return res.json({ 
           success: true, 
           dbConnected: true,
-          userCount: r.rows[0].count,
-          urlPreview: url ? url.substring(0, 60) + '...' : 'none'
+          loginTest: r.rows,
+          count: r.rows.length
         });
       } catch (e) {
         return res.json({ success: true, dbConnected: false, error: e.message });
