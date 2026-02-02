@@ -91,7 +91,9 @@ module.exports = async (req, res) => {
   const url = new URL(req.url, `https://${req.headers.host || 'localhost'}`);
   const pathname = url.pathname.replace('/api/', '');
   const method = req.method;
-  let data = {};
+  
+  // Vercel 自动解析 JSON body 到 req.body
+  const data = req.body || {};
 
   // CORS
   if (method === 'OPTIONS') {
@@ -102,21 +104,6 @@ module.exports = async (req, res) => {
   }
 
   try {
-    let data = {};
-    
-    // Vercel Serverless 需要克隆请求来多次读取
-    if (method !== 'GET' && method !== 'HEAD') {
-      try {
-        const reqClone = req.clone();
-        const raw = await reqClone.text();
-        if (raw) {
-          data = JSON.parse(raw);
-        }
-      } catch (e) {
-        console.log('Body parse error:', e.message);
-      }
-    }
-
     const authHeader = req.headers.authorization;
     const userResult = verifyToken(authHeader);
     const user = userResult.valid ? userResult.user : null;
