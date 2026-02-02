@@ -114,14 +114,17 @@ module.exports = async (req, res) => {
 
     // ========== Auth ==========
     if (pathname === 'auth/login' && method === 'POST') {
-      console.log('=== LOGIN REQUEST ===');
-      console.log('Raw body:', typeof req.body, req.body);
-      console.log('Parsed data:', data);
-      console.log('Email:', data?.email);
-      console.log('Password:', data?.password);
+      // 读取原始请求体
+      let rawBody = '';
+      try {
+        rawBody = await req.text();
+      } catch (e) {}
+      
+      console.log('Raw body:', rawBody);
+      console.log('Data object:', data);
       
       // 数据库模式
-      if (isDbConfigured()) {
+      if (isDbConfigured() && data?.email) {
         try {
           const url = getConnectionString();
           const { Client } = require('pg');
@@ -130,12 +133,12 @@ module.exports = async (req, res) => {
           const result = await client.query('SELECT * FROM users WHERE email = $1', [data.email]);
           await client.end();
           
-          console.log('DB rows found:', result.rows.length);
+          console.log('DB rows:', result.rows.length);
           
           if (result.rows.length > 0) {
             const user = result.rows[0];
-            console.log('User from DB:', user.email, user.password);
-            console.log('Comparing password:', data.password, '===', user.password, '?', data.password === user.password);
+            console.log('User found:', user.email);
+            console.log('Password match:', user.password === data.password);
             
             if (user.password === data.password) {
               return res.json({ success: true, data: { token: generateToken(user), user: { id: user.id, username: user.username, email: user.email } } });
