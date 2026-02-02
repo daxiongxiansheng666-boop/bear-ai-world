@@ -276,16 +276,6 @@ module.exports = async (req, res) => {
       }
     }
 
-    // ========== Test POST ==========
-    if (pathname === 'test-post' && method === 'POST') {
-      return res.json({ 
-        success: true, 
-        receivedData: data,
-        rawDataCheck: data?.email,
-        rawPasswordCheck: data?.password ? 'HAS_VALUE' : 'EMPTY'
-      });
-    }
-
     return res.status(404).json({ success: false, message: 'API不存在' });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message || '服务器错误' });
