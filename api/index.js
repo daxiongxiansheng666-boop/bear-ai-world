@@ -114,18 +114,26 @@ module.exports = async (req, res) => {
 
     // ========== Auth ==========
     if (pathname === 'auth/login' && method === 'POST') {
-      console.log('Login request received');
-      console.log('Data:', JSON.stringify(data));
-      console.log('DB configured:', isDbConfigured());
-      
       // 数据库模式
       if (isDbConfigured()) {
         try {
-          const result = await queryDb('SELECT * FROM users WHERE email = $1 AND password = $2', [data.email, data.password]);
-          console.log('DB result rows:', result.rows.length);
+          // 直接查询，不用参数，防止 prepared statement 问题
+          const url = getConnectionString();
+          const { Client } = require('pg');
+          const client = new Client({ connectionString: url });
+          await client.connect();
+          const result = await client.query('SELECT * FROM users WHERE email = $1', [data.email]);
+          await client.end();
+          
+          console.log('Direct DB query result:', result.rows.length);
+          
           if (result.rows.length > 0) {
-            const foundUser = result.rows[0];
-            return res.json({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
+            const user = result.rows[0];
+            if (user.password === data.password) {
+              return res.json({ success: true, data: { token: generateToken(user), user: { id: user.id, username: user.username, email: user.email } } });
+            } else {
+              console.log('Password mismatch:', user.password, 'vs', data.password);
+            }
           }
         } catch (e) {
           console.log('DB error:', e.message);
@@ -134,7 +142,6 @@ module.exports = async (req, res) => {
       
       // 内存模式
       const foundUser = memoryDb.users.find(u => u.email === data.email && u.password === data.password);
-      console.log('Memory mode user:', foundUser);
       if (foundUser) {
         return res.json({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
       }
@@ -252,19 +259,20 @@ module.exports = async (req, res) => {
     // ========== Debug ==========
     if (pathname === 'debug' && method === 'GET') {
       try {
-        const url = process.env.POSTGRES_URL || process.env.DATABASE_URL || process.env.PRISMA_DATABASE_URL;
-        const client = new Client({ connectionString: url.replace('prisma+postgres://', 'postgres://') });
+        const url = getConnectionString();
+        const { Client } = require('pg');
+        const client = new Client({ connectionString: url });
         await client.connect();
         
-        // 测试登录查询
-        const r = await client.query('SELECT * FROM users WHERE email = $1 AND password = $2', ['834202715@qq.com', 'sv834202715']);
+        // 测试登录查询（分两步）
+        const r = await client.query('SELECT * FROM users WHERE email = $1', ['834202715@qq.com']);
         
         await client.end();
         return res.json({ 
           success: true, 
           dbConnected: true,
-          loginTest: r.rows,
-          count: r.rows.length
+          usersFound: r.rows.length,
+          userData: r.rows
         });
       } catch (e) {
         return res.json({ success: true, dbConnected: false, error: e.message });
