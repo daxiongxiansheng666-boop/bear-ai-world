@@ -3,17 +3,14 @@
   "buildCommand": "",
   "outputDirectory": "public",
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/index.js" },
-    { "src": "/api", "dest": "/api/index.js" }
-  ],
-  "headers": [
-    { "source": "/api/(.*)", "headers": [
-      { "key": "Access-Control-Allow-Origin", "value": "*" },
-      { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
-      { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
-    ]},
-    { "source": "/assets/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]},
-    { "source": "/css/(.*).css", "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]},
-    { "source": "/js/(.*).js", "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]}
+    { "src": "/api/(.*)", "headers": {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }, "dest": "/api/index.js" },
+    { "src": "/api", "dest": "/api/index.js" },
+    { "src": "/assets/(.*)", "headers": { "Cache-Control": "public, max-age=31536000, immutable" } },
+    { "src": "/css/(.*)\\.css", "headers": { "Cache-Control": "public, max-age=86400" } },
+    { "src": "/js/(.*)\\.js", "headers": { "Cache-Control": "public, max-age=86400" } }
   ]
 }
