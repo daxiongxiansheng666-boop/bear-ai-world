@@ -5,13 +5,19 @@ let sql;
 let useDatabase = false;
 
 try {
-  const { createClient } = require('@vercel/postgres');
-  sql = createClient({
-    connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL
-  });
-  useDatabase = true;
+  if (process.env.POSTGRES_URL || process.env.DATABASE_URL) {
+    const { createClient } = require('@vercel/postgres');
+    sql = createClient({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL
+    });
+    useDatabase = true;
+    console.log('Vercel Postgres 已配置');
+  } else {
+    console.log('Vercel Postgres 未配置，使用内存模式');
+    useDatabase = false;
+  }
 } catch (e) {
-  console.log('Vercel Postgres 未配置，使用内存模式');
+  console.log('Vercel Postgres 初始化失败，使用内存模式', e.message);
   useDatabase = false;
 }
 
