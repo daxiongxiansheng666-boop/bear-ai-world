@@ -271,6 +271,8 @@
           if (data.success) {
             // 保存 token
             localStorage.setItem('bear_ai_token', data.data.token);
+            // 设置登录标记
+            localStorage.setItem('isLoggedIn', 'true');
             showToast('登录成功！', 'success');
             setTimeout(() => {
               window.location.href = '/admin.html';

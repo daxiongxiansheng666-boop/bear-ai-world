@@ -2,6 +2,12 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+  <script>
+    // 路由守卫：检查登录令牌
+    if (!localStorage.getItem('isLoggedIn')) {
+      window.location.href = '/login.html';
+    }
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>管理后台 - 大熊的AI世界</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
