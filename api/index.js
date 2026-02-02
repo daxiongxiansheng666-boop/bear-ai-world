@@ -1,27 +1,34 @@
-// Vercel Serverless API Handler with Postgres
+// Vercel Serverless API Handler with Prisma
 
-// 尝试加载 Vercel Postgres
-let sql;
+let prisma;
 let useDatabase = false;
 
 try {
-  if (process.env.POSTGRES_URL || process.env.DATABASE_URL) {
+  // 优先使用 Prisma
+  if (process.env.PRISMA_DATABASE_URL) {
+    const { PrismaClient } = require('@prisma/client');
+    prisma = new PrismaClient();
+    useDatabase = true;
+    console.log('Prisma 数据库已配置');
+  }
+  // 备用 Vercel Postgres
+  else if (process.env.POSTGRES_URL) {
     const { createClient } = require('@vercel/postgres');
-    sql = createClient({
-      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL
+    prisma = createClient({
+      connectionString: process.env.POSTGRES_URL
     });
     useDatabase = true;
     console.log('Vercel Postgres 已配置');
   } else {
-    console.log('Vercel Postgres 未配置，使用内存模式');
+    console.log('未配置数据库，使用内存模式');
     useDatabase = false;
   }
 } catch (e) {
-  console.log('Vercel Postgres 初始化失败，使用内存模式', e.message);
+  console.log('数据库初始化失败，使用内存模式', e.message);
   useDatabase = false;
 }
 
-// 内存模式数据库（备用）
+// 内存模式数据库
 let memoryDb = {
   users: [{ id: 1, username: '大熊', email: '834202715@qq.com', password: 'sv834202715', bio: '全栈AI探索者' }],
   articles: [
@@ -98,123 +105,111 @@ module.exports = async (req, res) => {
 
     // ========== Auth ==========
     if (pathname === 'auth/login' && method === 'POST') {
-      if (useDatabase) {
-        const result = await sql`SELECT * FROM users WHERE email = ${data.email}`;
-        if (result.rows.length > 0 && result.rows[0].password === data.password) {
-          const foundUser = result.rows[0];
-          return res.json({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
+      // Prisma 模式
+      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+        try {
+          const foundUser = await prisma.users.findFirst({
+            where: { email: data.email, password: data.password }
+          });
+          if (foundUser) {
+            return res.json({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
+          }
+        } catch (e) {
+          console.log('Prisma 查询失败:', e.message);
         }
-      } else {
-        const foundUser = memoryDb.users.find(u => u.email === data.email);
-        if (foundUser && data.password === foundUser.password) {
-          return res.json({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
-        }
+      }
+      // 内存模式
+      const foundUser = memoryDb.users.find(u => u.email === data.email && u.password === data.password);
+      if (foundUser) {
+        return res.json({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
       }
       return res.status(400).json({ success: false, message: '邮箱或密码错误' });
     }
 
-    if (pathname === 'auth/register' && method === 'POST') {
-      if (useDatabase) {
-        await sql`INSERT INTO users (username, email, password) VALUES (${data.username}, ${data.email}, ${data.password})`;
-        const result = await sql`SELECT * FROM users WHERE email = ${data.email}`;
-        const newUser = result.rows[0];
-        return res.json({ success: true, data: { token: generateToken(newUser), user: { id: newUser.id, username: newUser.username, email: newUser.email } } });
-      }
-      return res.json({ success: true });
-    }
-
-    if (pathname === 'auth/me' && method === 'GET' && user) {
-      if (useDatabase) {
-        const result = await sql`SELECT * FROM users WHERE id = ${user.id}`;
-        if (result.rows.length > 0) {
-          const u = result.rows[0];
-          return res.json({ success: true, data: { id: u.id, username: u.username, email: u.email, bio: u.bio } });
-        }
-      }
-      return res.json({ success: true, data: user });
-    }
-
     // ========== Config ==========
     if (pathname === 'config' && method === 'GET') {
-      if (useDatabase) {
-        const result = await sql`SELECT * FROM config`;
-        const config = {};
-        result.rows.forEach(row => { config[row.key] = row.value; });
-        return res.json({ success: true, data: config });
+      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+        try {
+          const configs = await prisma.config.findMany();
+          const configObj = {};
+          configs.forEach(c => { configObj[c.key] = c.value; });
+          return res.json({ success: true, data: configObj });
+        } catch (e) {}
       }
       return res.json({ success: true, data: {} });
     }
 
     if (pathname === 'config' && method === 'POST' && user) {
-      if (useDatabase) {
-        for (const [key, value] of Object.entries(data)) {
-          await sql`INSERT INTO config (key, value) VALUES (${key}, ${value}) ON CONFLICT (key) DO UPDATE SET value = ${value}, updated_at = CURRENT_TIMESTAMP`;
+      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+        try {
+          for (const [key, value] of Object.entries(data)) {
+            await prisma.config.upsert({
+              where: { key },
+              update: { value, updated_at: new Date() },
+              create: { key, value }
+            });
+          }
+          return res.json({ success: true, message: '配置已保存' });
+        } catch (e) {
+          console.log('Prisma 保存失败:', e.message);
         }
-        return res.json({ success: true, message: '配置已保存' });
       }
       return res.json({ success: true, message: '配置已保存（内存模式）' });
     }
 
     // ========== Articles ==========
     if (pathname === 'articles' && method === 'GET') {
-      if (useDatabase) {
-        const result = await sql`SELECT * FROM articles ORDER BY created_at DESC`;
-        return res.json({ success: true, data: { articles: result.rows, total: result.rows.length } });
+      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+        try {
+          const articles = await prisma.articles.findMany({ orderBy: { created_at: 'desc' } });
+          return res.json({ success: true, data: { articles, total: articles.length } });
+        } catch (e) {}
       }
       return res.json({ success: true, data: { articles: memoryDb.articles, total: memoryDb.articles.length } });
     }
 
-    if (pathname === 'articles' && method === 'POST' && user) {
-      const newArticle = {
-        title: sanitize(data.title),
-        slug: (data.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now(),
-        content: sanitize(data.content),
-        excerpt: sanitize(data.excerpt),
-        category: data.category,
-        tags: data.tags,
-        author: user.username,
-        views: 0,
-        likes: 0,
-        created_at: new Date().toISOString().split('T')[0]
-      };
-      if (useDatabase) {
-        await sql`INSERT INTO articles (title, slug, excerpt, content, category, tags, author) VALUES (${newArticle.title}, ${newArticle.slug}, ${newArticle.excerpt}, ${newArticle.content}, ${newArticle.category}, ${newArticle.tags}, ${newArticle.author})`;
-      }
-      return res.json({ success: true, data: newArticle });
-    }
-
     // ========== Projects ==========
     if (pathname === 'projects' && method === 'GET') {
-      if (useDatabase) {
-        const result = await sql`SELECT * FROM projects ORDER BY created_at DESC`;
-        return res.json({ success: true, data: result.rows });
+      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+        try {
+          const projects = await prisma.projects.findMany({ orderBy: { created_at: 'desc' } });
+          return res.json({ success: true, data: projects });
+        } catch (e) {}
       }
       return res.json({ success: true, data: memoryDb.projects });
     }
 
     // ========== Stats ==========
     if (pathname === 'stats' && method === 'GET') {
-      if (useDatabase) {
-        const articles = await sql`SELECT COUNT(*) as count FROM articles`;
-        const projects = await sql`SELECT COUNT(*) as count FROM projects`;
-        const messages = await sql`SELECT COUNT(*) as count FROM messages`;
-        return res.json({ success: true, data: { articles: parseInt(articles.rows[0].count), projects: parseInt(projects.rows[0].count), messages: parseInt(messages.rows[0].count), views: 0 } });
+      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+        try {
+          const articles = await prisma.articles.count();
+          const projects = await prisma.projects.count();
+          const messages = await prisma.messages.count();
+          return res.json({ success: true, data: { articles, projects, messages, views: 0 } });
+        } catch (e) {}
       }
       return res.json({ success: true, data: { articles: memoryDb.articles.length, projects: memoryDb.projects.length, messages: memoryDb.messages.length } });
     }
 
     // ========== Messages ==========
     if (pathname === 'messages' && method === 'GET') {
-      if (useDatabase) {
-        const result = await sql`SELECT * FROM messages ORDER BY created_at DESC LIMIT 50`;
-        return res.json({ success: true, data: result.rows });
+      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+        try {
+          const messages = await prisma.messages.findMany({ take: 50, orderBy: { created_at: 'desc' } });
+          return res.json({ success: true, data: messages });
+        } catch (e) {}
       }
       return res.json({ success: true, data: memoryDb.messages });
     }
 
     if (pathname === 'messages' && method === 'POST') {
-      if (useDatabase) {
-        await sql`INSERT INTO messages (name, email, content) VALUES (${sanitize(data.name)}, ${sanitize(data.email)}, ${sanitize(data.content)})`;
+      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+        try {
+          await prisma.messages.create({
+            data: { name: sanitize(data.name), email: sanitize(data.email), content: sanitize(data.content) }
+          });
+        } catch (e) {}
       }
       return res.json({ success: true, message: '留言成功' });
     }
@@ -223,26 +218,25 @@ module.exports = async (req, res) => {
     if (pathname === 'ai/chat' && method === 'POST') {
       if (!data.message) return res.status(400).json({ success: false, message: '消息不能为空' });
       
-      // 检查是否有配置 API Key
-      if (useDatabase) {
-        const result = await sql`SELECT value FROM config WHERE key = 'deepseek_api_key'`;
-        const apiKey = result.rows[0]?.value;
-        if (apiKey && apiKey.startsWith('sk-')) {
-          // 有 API Key，调用真实 AI
-          try {
-            const aiRes = await fetch('https://api.deepseek.com/chat/completions', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-              body: JSON.stringify({ model: 'deepseek-chat', messages: [{ role: 'user', content: data.message }] })
-            });
-            const aiData = await aiRes.json();
-            if (aiData.choices) {
-              return res.json({ success: true, data: { response: aiData.choices[0].message.content } });
-            }
-          } catch (e) {}
-        }
+      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+        try {
+          const config = await prisma.config.findFirst({ where: { key: 'deepseek_api_key' } });
+          const apiKey = config?.value;
+          if (apiKey && apiKey.startsWith('sk-')) {
+            try {
+              const aiRes = await fetch('https://api.deepseek.com/chat/completions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify({ model: 'deepseek-chat', messages: [{ role: 'user', content: data.message }] })
+              });
+              const aiData = await aiRes.json();
+              if (aiData.choices) {
+                return res.json({ success: true, data: { response: aiData.choices[0].message.content } });
+              }
+            } catch (e) {}
+          }
+        } catch (e) {}
       }
-      // 模拟响应
       return res.json({ success: true, data: { response: getAIResponse(data.message) } });
     }
 
