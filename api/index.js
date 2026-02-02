@@ -114,10 +114,14 @@ module.exports = async (req, res) => {
 
     // ========== Auth ==========
     if (pathname === 'auth/login' && method === 'POST') {
+      console.log('登录请求:', data.email, '数据库配置:', isDbConfigured());
+      
       // 数据库模式
       if (isDbConfigured()) {
         try {
+          console.log('尝试数据库查询...');
           const result = await queryDb('SELECT * FROM users WHERE email = $1 AND password = $2', [data.email, data.password]);
+          console.log('数据库查询结果:', result.rows.length);
           if (result.rows.length > 0) {
             const foundUser = result.rows[0];
             return res.json({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
