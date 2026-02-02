@@ -583,6 +583,12 @@
           </a>
         </li>
         <li class="admin-nav-item">
+          <a class="admin-nav-link" data-page="api-config">
+            <span class="icon">🔑</span>
+            <span>API配置</span>
+          </a>
+        </li>
+        <li class="admin-nav-item">
           <a class="admin-nav-link" href="/">
             <span class="icon">🌐</span>
             <span>查看站点</span>
@@ -768,6 +774,59 @@
           </div>
           <div id="messagesList">
             <!-- Messages will be loaded here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- API Config Page -->
+      <div class="admin-page" id="page-api-config">
+        <div class="admin-header">
+          <h1>API配置</h1>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3 class="admin-card-title">🔑 AI服务配置</h3>
+          </div>
+          <form class="admin-form" id="apiConfigForm">
+            <div class="form-group">
+              <label>DeepSeek API Key</label>
+              <input type="password" id="deepseekApiKey" placeholder="输入DeepSeek API Key">
+              <small style="color: var(--text-muted);">在 https://platform.deepseek.com/balance 获取</small>
+            </div>
+            <div class="form-group">
+              <label>AI模型选择</label>
+              <select id="aiModel">
+                <option value="deepseek-chat">DeepSeek Chat</option>
+                <option value="gpt-4">GPT-4</option>
+                <option value="claude-3">Claude 3</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">保存配置</button>
+          </form>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3 class="admin-card-title">📊 API状态</h3>
+          </div>
+          <div id="apiStatus">
+            <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+              <div>
+                <div style="color: var(--text-muted); margin-bottom: 0.5rem;">DeepSeek API</div>
+                <div id="deepseekStatus" style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--warning);"></span>
+                  <span>待配置</span>
+                </div>
+              </div>
+              <div>
+                <div style="color: var(--text-muted); margin-bottom: 0.5rem;">AI对话功能</div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--success);"></span>
+                  <span>模拟响应（需配置API）</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -981,6 +1040,54 @@
         closeProjectModal();
         showToast('项目已添加', 'success');
       });
+
+      // API Config form
+      document.getElementById('apiConfigForm')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const apiKey = document.getElementById('deepseekApiKey').value;
+        const model = document.getElementById('aiModel').value;
+        
+        if (apiKey) {
+          localStorage.setItem('deepseek_api_key', apiKey);
+        }
+        localStorage.setItem('ai_model', model);
+        
+        showToast('API配置已保存', 'success');
+        updateApiStatus();
+      });
+
+      // Load saved API config
+      loadApiConfig();
+    }
+
+    function loadApiConfig() {
+      const savedApiKey = localStorage.getItem('deepseek_api_key');
+      const savedModel = localStorage.getItem('ai_model');
+      
+      if (savedApiKey) {
+        document.getElementById('deepseekApiKey').value = savedApiKey;
+      }
+      if (savedModel) {
+        document.getElementById('aiModel').value = savedModel;
+      }
+      updateApiStatus();
+    }
+
+    function updateApiStatus() {
+      const savedApiKey = localStorage.getItem('deepseek_api_key');
+      const deepseekStatus = document.getElementById('deepseekStatus');
+      
+      if (savedApiKey && savedApiKey.startsWith('sk-')) {
+        deepseekStatus.innerHTML = `
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--success);"></span>
+          <span>已配置</span>
+        `;
+      } else {
+        deepseekStatus.innerHTML = `
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--warning);"></span>
+          <span>待配置</span>
+        `;
+      }
     }
 
     // Load data
