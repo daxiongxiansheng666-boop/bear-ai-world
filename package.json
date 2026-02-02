@@ -6,17 +6,11 @@
   "scripts": {
     "start": "node server/server.js",
     "dev": "node server/server.js",
-    "simple": "node server/simple-server.js"
+    "simple": "node server/simple-server.js",
+    "build": "echo 'No build required for static site'",
+    "vercel-build": "echo 'Vercel build complete'"
   },
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^9.4.3",
-    "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.2",
-    "marked": "^11.1.1",
-    "multer": "^1.4.5-lts.1"
-  },
+  "dependencies": {},
   "engines": {
     "node": ">=18.0.0"
   }
