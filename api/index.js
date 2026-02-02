@@ -248,13 +248,21 @@ module.exports = async (req, res) => {
 
     // ========== Debug ==========
     if (pathname === 'debug' && method === 'GET') {
-      const url = process.env.POSTGRES_URL || process.env.DATABASE_URL || process.env.PRISMA_DATABASE_URL;
-      return res.json({ 
-        success: true, 
-        hasUrl: !!url,
-        urlPreview: url ? url.substring(0, 60) + '...' : 'none',
-        nodeEnv: process.env.NODE_ENV
-      });
+      try {
+        const url = process.env.POSTGRES_URL || process.env.DATABASE_URL || process.env.PRISMA_DATABASE_URL;
+        const client = new Client({ connectionString: url.replace('prisma+postgres://', 'postgres://') });
+        await client.connect();
+        const r = await client.query('SELECT COUNT(*) as count FROM users');
+        await client.end();
+        return res.json({ 
+          success: true, 
+          dbConnected: true,
+          userCount: r.rows[0].count,
+          urlPreview: url ? url.substring(0, 60) + '...' : 'none'
+        });
+      } catch (e) {
+        return res.json({ success: true, dbConnected: false, error: e.message });
+      }
     }
 
     return res.status(404).json({ success: false, message: 'API不存在' });
