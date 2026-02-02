@@ -114,33 +114,45 @@ module.exports = async (req, res) => {
 
     // ========== Auth ==========
     if (pathname === 'auth/login' && method === 'POST') {
-      // 读取原始请求体
-      let rawBody = '';
+      // 手动解析请求体
+      let bodyData = {};
       try {
-        rawBody = await req.text();
-      } catch (e) {}
+        const raw = await req.text();
+        if (raw) {
+          bodyData = JSON.parse(raw);
+        }
+      } catch (e) {
+        console.log('Parse error:', e.message);
+      }
       
-      console.log('Raw body:', rawBody);
-      console.log('Data object:', data);
+      const email = bodyData.email || data?.email;
+      const password = bodyData.password || data?.password;
+      
+      console.log('Email:', email, 'Password:', password ? '***' : 'EMPTY');
+      
+      if (!email || !password) {
+        console.log('Missing credentials');
+        return res.status(400).json({ success: false, message: '邮箱或密码错误' });
+      }
       
       // 数据库模式
-      if (isDbConfigured() && data?.email) {
+      if (isDbConfigured()) {
         try {
           const url = getConnectionString();
           const { Client } = require('pg');
           const client = new Client({ connectionString: url });
           await client.connect();
-          const result = await client.query('SELECT * FROM users WHERE email = $1', [data.email]);
+          const result = await client.query('SELECT * FROM users WHERE email = $1', [email]);
           await client.end();
           
           console.log('DB rows:', result.rows.length);
           
           if (result.rows.length > 0) {
             const user = result.rows[0];
-            console.log('User found:', user.email);
-            console.log('Password match:', user.password === data.password);
+            console.log('User:', user.email);
+            console.log('Password check:', user.password === password);
             
-            if (user.password === data.password) {
+            if (user.password === password) {
               return res.json({ success: true, data: { token: generateToken(user), user: { id: user.id, username: user.username, email: user.email } } });
             }
           }
