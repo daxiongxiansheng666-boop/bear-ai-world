@@ -3,27 +3,25 @@
 // 使用 Node.js 原生 pg 模块
 const { Client } = require('pg');
 
-let pgClient;
-let useDatabase = false;
+function getDbUrl() {
+  return process.env.POSTGRES_URL || process.env.DATABASE_URL || process.env.PRISMA_DATABASE_URL || null;
+}
 
-try {
-  // 老板给的 Prisma URL 格式转标准 postgres
-  const dbUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL || process.env.PRISMA_DATABASE_URL;
-  
-  if (dbUrl) {
-    // 转换 prisma+postgres:// -> postgres://
-    let connectionString = dbUrl.replace('prisma+postgres://', 'postgres://');
-    
-    pgClient = new Client({ connectionString });
-    useDatabase = true;
-    console.log('PostgreSQL 已配置');
-  } else {
-    console.log('未配置数据库，使用内存模式');
-    useDatabase = false;
-  }
-} catch (e) {
-  console.log('PostgreSQL 初始化失败，使用内存模式', e.message);
-  useDatabase = false;
+function isDbConfigured() {
+  return !!getDbUrl();
+}
+
+function getConnectionString() {
+  const dbUrl = getDbUrl();
+  if (!dbUrl) return null;
+  // 转换 prisma+postgres:// -> postgres://
+  return dbUrl.replace('prisma+postgres://', 'postgres://');
+}
+
+function getClient() {
+  const connectionString = getConnectionString();
+  if (!connectionString) return null;
+  return new Client({ connectionString });
 }
 
 // 内存模式数据库
@@ -77,13 +75,15 @@ function getAIResponse(message) {
 }
 
 async function queryDb(text, params) {
-  if (!useDatabase || !pgClient) throw new Error('数据库未配置');
+  if (!isDbConfigured()) throw new Error('数据库未配置');
+  const client = getClient();
+  if (!client) throw new Error('无法创建数据库客户端');
   try {
-    await pgClient.connect();
-    const result = await pgClient.query(text, params);
+    await client.connect();
+    const result = await client.query(text, params);
     return result;
-  } catch (e) {
-    throw e;
+  } finally {
+    await client.end();
   }
 }
 
@@ -115,7 +115,7 @@ module.exports = async (req, res) => {
     // ========== Auth ==========
     if (pathname === 'auth/login' && method === 'POST') {
       // 数据库模式
-      if (useDatabase) {
+      if (isDbConfigured()) {
         try {
           const result = await queryDb('SELECT * FROM users WHERE email = $1 AND password = $2', [data.email, data.password]);
           if (result.rows.length > 0) {
@@ -136,7 +136,7 @@ module.exports = async (req, res) => {
 
     // ========== Config ==========
     if (pathname === 'config' && method === 'GET') {
-      if (useDatabase) {
+      if (isDbConfigured()) {
         try {
           const result = await queryDb('SELECT * FROM config');
           const configObj = {};
@@ -148,7 +148,7 @@ module.exports = async (req, res) => {
     }
 
     if (pathname === 'config' && method === 'POST' && user) {
-      if (useDatabase) {
+      if (isDbConfigured()) {
         try {
           for (const [key, value] of Object.entries(data)) {
             await queryDb('INSERT INTO config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = CURRENT_TIMESTAMP', [key, value]);
@@ -163,7 +163,7 @@ module.exports = async (req, res) => {
 
     // ========== Articles ==========
     if (pathname === 'articles' && method === 'GET') {
-      if (useDatabase) {
+      if (isDbConfigured()) {
         try {
           const result = await queryDb('SELECT * FROM articles ORDER BY created_at DESC');
           return res.json({ success: true, data: { articles: result.rows, total: result.rows.length } });
@@ -174,7 +174,7 @@ module.exports = async (req, res) => {
 
     // ========== Projects ==========
     if (pathname === 'projects' && method === 'GET') {
-      if (useDatabase) {
+      if (isDbConfigured()) {
         try {
           const result = await queryDb('SELECT * FROM projects ORDER BY created_at DESC');
           return res.json({ success: true, data: result.rows });
@@ -185,7 +185,7 @@ module.exports = async (req, res) => {
 
     // ========== Stats ==========
     if (pathname === 'stats' && method === 'GET') {
-      if (useDatabase) {
+      if (isDbConfigured()) {
         try {
           const articles = await queryDb('SELECT COUNT(*) as count FROM articles');
           const projects = await queryDb('SELECT COUNT(*) as count FROM projects');
@@ -198,7 +198,7 @@ module.exports = async (req, res) => {
 
     // ========== Messages ==========
     if (pathname === 'messages' && method === 'GET') {
-      if (useDatabase) {
+      if (isDbConfigured()) {
         try {
           const result = await queryDb('SELECT * FROM messages ORDER BY created_at DESC LIMIT 50');
           return res.json({ success: true, data: result.rows });
@@ -208,7 +208,7 @@ module.exports = async (req, res) => {
     }
 
     if (pathname === 'messages' && method === 'POST') {
-      if (useDatabase) {
+      if (isDbConfigured()) {
         try {
           await queryDb('INSERT INTO messages (name, email, content) VALUES ($1, $2, $3)', [sanitize(data.name), sanitize(data.email), sanitize(data.content)]);
         } catch (e) {}
@@ -220,7 +220,7 @@ module.exports = async (req, res) => {
     if (pathname === 'ai/chat' && method === 'POST') {
       if (!data.message) return res.status(400).json({ success: false, message: '消息不能为空' });
       
-      if (useDatabase) {
+      if (isDbConfigured()) {
         try {
           const result = await queryDb('SELECT value FROM config WHERE key = $1', ['deepseek_api_key']);
           const apiKey = result.rows[0]?.value;
