@@ -12,12 +12,14 @@ const API_CONFIG = {
 
 // 内存数据库（生产环境建议使用Vercel KV或外部数据库）
 let db = {
-  users: [{ id: 1, username: '大熊', email: 'bear@example.com', password: 'admin123', bio: '热爱AI与技术的探索者' }],
+  users: [{ id: 1, username: '大熊', email: '834202715@qq.com', password: 'sv834202715', bio: '全栈AI探索者 & MCN创业者' }],
   articles: [
-    { id: 1, title: 'ChatGPT提示词工程完全指南', slug: 'chatgpt-prompt-engineering-guide', excerpt: '掌握提示词工程的核心技巧', category: 'AI教程', author: '大熊', views: 150, likes: 12 },
-    { id: 2, title: 'AI图像生成工具横向评测', slug: 'ai-image-generation-tools-comparison', excerpt: '主流AI绘图工具全面对比', category: '其他', author: '大熊', views: 120, likes: 8 },
-    { id: 3, title: '我的第一个AI项目', slug: 'my-first-ai-project', excerpt: '分享开发基于大语言模型的问答机器人', category: '项目案例', author: '大熊', views: 200, likes: 25 },
-    { id: 4, title: '2024年AI发展回顾与展望', slug: 'ai-2024-review', excerpt: '回顾2024年AI领域的重大进展', category: '个人动态', author: '大熊', views: 180, likes: 15 }
+    { id: 1, title: '2024年AI发展回顾与2025年趋势展望', slug: 'ai-2024-review-2025-outlook', excerpt: '回顾2024年AI领域的重大进展，GPT-4o、Claude 3、Sora等重磅发布，展望2025年AI发展趋势。', category: 'AI教程', author: '大熊', views: 150, likes: 12, content: '2024年是人工智能发展史上最重要的一年...', created_at: '2024-01-15' },
+    { id: 2, title: 'RAG实战：如何构建一个真正的个人知识库', slug: 'rag-personal-knowledge-base-tutorial', excerpt: '利用检索增强生成技术，让AI真正理解你的专业知识。本文手把手教你搭建个人知识库系统。', category: 'AI教程', author: '大熊', views: 120, likes: 8, content: '你是否遇到过ChatGPT不知道你公司的业务细节...', created_at: '2024-01-12' },
+    { id: 3, title: '主流AI编程助手对比评测', slug: 'ai-coding-assistant-comparison', excerpt: '三大AI编程工具横向评测，从代码补全、Bug修复、上下文理解等多个维度进行对比。', category: 'AI教程', author: '大熊', views: 200, likes: 25, content: '作为程序员，AI编程助手已经成为日常开发的必备工具...', created_at: '2024-01-10' },
+    { id: 4, title: 'AI图像生成工具横评', slug: 'ai-image-generation-tools-comparison', excerpt: '三大AI图像生成工具全面对比，从生成质量、使用成本、易用性等维度分析。', category: 'AI教程', author: '大熊', views: 180, likes: 15, content: 'AI图像生成在过去一年取得了惊人进步...', created_at: '2024-01-08' },
+    { id: 5, title: 'ChatGPT提示词工程完全指南', slug: 'chatgpt-prompt-engineering-guide', excerpt: '掌握提示词工程的核心技巧，让AI输出更精准、更高效。', category: 'AI教程', author: '大熊', views: 250, likes: 30, content: '提示词工程是AI时代的必备技能...', created_at: '2024-01-05' },
+    { id: 6, title: '我的第一个AI项目', slug: 'my-first-ai-project', excerpt: '分享开发基于大语言模型的问答机器人完整历程。', category: '项目案例', author: '大熊', views: 300, likes: 45, content: '从零开始搭建一个AI问答机器人...', created_at: '2024-01-03' }
   ],
   projects: [
     { id: 1, title: 'AI写作助手', slug: 'ai-writing-assistant', description: '基于GPT的智能写作工具', tech_stack: 'React, Node.js', featured: 1 },
