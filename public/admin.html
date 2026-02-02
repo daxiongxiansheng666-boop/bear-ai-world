@@ -620,9 +620,9 @@
             <div class="admin-stat-label">总阅读量</div>
           </div>
           <div class="admin-stat-card">
-            <div class="admin-stat-icon">💬</div>
-            <div class="admin-stat-value" id="statComments">0</div>
-            <div class="admin-stat-label">留言数量</div>
+            <div class="admin-stat-icon">🤖</div>
+            <div class="admin-stat-value" id="statAIChat">0</div>
+            <div class="admin-stat-label">AI对话次数</div>
           </div>
         </div>
 
@@ -870,17 +870,29 @@
   <script src="/js/api.js"></script>
   <script src="/js/main.js"></script>
   <script>
+    // 路由守卫：检查登录状态
+    (function() {
+      const token = localStorage.getItem('bear_ai_token');
+      if (!token) {
+        // 未登录，跳转登录页
+        window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        return;
+      }
+    })();
+
     // Data storage
     let articles = [];
     let projects = [];
     let messages = [];
     let currentUser = { username: '大熊', email: 'bear@example.com', bio: '热爱AI与技术的探索者' };
+    let aiChatCount = parseInt(localStorage.getItem('ai_chat_count') || '0');
 
     document.addEventListener('DOMContentLoaded', () => {
       initNavigation();
       initForms();
       loadData();
       generateChart();
+      updateAIChatStat();
     });
 
     // Navigation
@@ -979,40 +991,51 @@
         document.getElementById('statArticles').textContent = stats.data.articles;
         document.getElementById('statProjects').textContent = stats.data.projects;
         document.getElementById('statViews').textContent = formatNumber(stats.data.views);
-        document.getElementById('statComments').textContent = stats.data.comments;
+        document.getElementById('statAIChat').textContent = formatNumber(parseInt(localStorage.getItem('ai_chat_count') || '0'));
       } catch (e) {
-        console.error('Failed to load stats');
+        // 使用本地缓存数据
+        document.getElementById('statArticles').textContent = articles.length;
+        document.getElementById('statProjects').textContent = projects.length;
+        document.getElementById('statViews').textContent = formatNumber(articles.reduce((sum, a) => sum + (a.views || 0), 0));
+        document.getElementById('statAIChat').textContent = formatNumber(parseInt(localStorage.getItem('ai_chat_count') || '0'));
       }
 
-      // Load articles
+      // Load articles - 使用真实API数据
       try {
         const articlesData = await getArticles();
         articles = articlesData.data.articles;
-        renderArticles();
       } catch (e) {
+        // 使用模拟数据
         articles = [
-          { id: 1, title: 'ChatGPT提示词工程完全指南', slug: 'chatgpt-prompt-engineering-guide', category: 'AI教程', views: 150, created_at: '2024-01-15' },
-          { id: 2, title: 'AI图像生成工具横向评测', slug: 'ai-image-generation-tools-comparison', category: '其他', views: 120, created_at: '2024-01-10' },
-          { id: 3, title: '我的第一个AI项目', slug: 'my-first-ai-project', category: '项目案例', views: 200, created_at: '2024-01-05' }
+          { id: 1, title: 'ChatGPT提示词工程完全指南', slug: 'chatgpt-prompt-engineering-guide', category: 'AI教程', views: 150, likes: 12, created_at: '2024-01-15' },
+          { id: 2, title: 'AI图像生成工具横向评测', slug: 'ai-image-generation-tools-comparison', category: '其他', views: 120, likes: 8, created_at: '2024-01-10' },
+          { id: 3, title: '我的第一个AI项目', slug: 'my-first-ai-project', category: '项目案例', views: 200, likes: 25, created_at: '2024-01-05' },
+          { id: 4, title: '2024年AI发展回顾与展望', slug: 'ai-2024-review', category: '个人动态', views: 180, likes: 15, created_at: '2024-01-03' }
         ];
-        renderArticles();
       }
+      renderArticles();
 
-      // Load projects
+      // Load projects - 使用真实API数据
       try {
         const projectsData = await getProjects();
         projects = projectsData.data;
-        renderProjects();
       } catch (e) {
+        // 使用模拟数据
         projects = [
           { id: 1, title: 'AI写作助手', tech_stack: 'React, Node.js', featured: 1, created_at: '2024-01-10' },
-          { id: 2, title: '智能图像识别系统', tech_stack: 'Python, PyTorch', featured: 1, created_at: '2024-01-05' }
+          { id: 2, title: '智能图像识别系统', tech_stack: 'Python, PyTorch', featured: 1, created_at: '2024-01-05' },
+          { id: 3, title: 'Bear AI World', tech_stack: 'Vercel, Next.js', featured: 1, created_at: '2024-02-03' }
         ];
-        renderProjects();
       }
+      renderProjects();
 
       // Load messages
       loadMessages();
+    }
+
+    function updateAIChatStat() {
+      const count = parseInt(localStorage.getItem('ai_chat_count') || '0');
+      document.getElementById('statAIChat').textContent = formatNumber(count);
     }
 
     function formatNumber(num) {
