@@ -1,0 +1,31 @@
+services:
+  # Web 应用服务
+  - type: web
+    name: bear-ai-api
+    env: node
+    buildCommand: npm install
+    startCommand: node server/server.js
+    healthCheckPath: /api/stats
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: AI_PROVIDER
+        value: mock
+      # JWT Secret - 在 Render Dashboard 中设置
+      - key: JWT_SECRET
+        generateValue: true
+      # OpenAI (可选)
+      - key: OPENAI_API_KEY
+        fromVault: true
+      # Claude (可选)
+      - key: CLAUDE_API_KEY
+        fromVault: true
+    domains:
+      - bear-ai-world.com
+      - www.bear-ai-world.com
+
+  # PostgreSQL 数据库 (可选，如需更强大的数据库)
+  # - type: pserv
+  #   name: bear-ai-db
+  #   plan: free
+  #   env: postgres

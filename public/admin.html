@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 - 大熊的AI世界</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <style>
+    /* Admin Styles */
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .admin-sidebar {
+      width: 260px;
+      background: var(--bg-dark);
+      border-right: 1px solid var(--border-color);
+      padding: 1.5rem 0;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .admin-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0 1.5rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1rem;
+    }
+
+    .admin-logo .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+    }
+
+    .admin-logo span {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .admin-nav {
+      list-style: none;
+    }
+
+    .admin-nav-item {
+      margin-bottom: 0.25rem;
+    }
+
+    .admin-nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1.5rem;
+      color: var(--text-secondary);
+      transition: all var(--transition-fast);
+      cursor: pointer;
+      border-left: 3px solid transparent;
+    }
+
+    .admin-nav-link:hover {
+      color: var(--text-primary);
+      background: var(--bg-glass);
+    }
+
+    .admin-nav-link.active {
+      color: var(--primary);
+      background: rgba(0, 240, 255, 0.05);
+      border-left-color: var(--primary);
+    }
+
+    .admin-nav-link .icon {
+      font-size: 1.2rem;
+    }
+
+    /* Main Content */
+    .admin-main {
+      flex: 1;
+      margin-left: 260px;
+      padding: 2rem;
+    }
+
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .admin-header h1 {
+      font-size: 1.5rem;
+      margin: 0;
+    }
+
+    .admin-user {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .admin-user-avatar {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    /* Cards */
+    .admin-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .admin-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .admin-card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    /* Stats Grid */
+    .admin-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .admin-stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .admin-stat-icon {
+      width: 50px;
+      height: 50px;
+      margin: 0 auto 1rem;
+      background: linear-gradient(135deg, rgba(0,240,255,0.1), rgba(255,0,255,0.1));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .admin-stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      font-family: var(--font-mono);
+    }
+
+    .admin-stat-label {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+
+    /* Tables */
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .admin-table th,
+    .admin-table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .admin-table th {
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .admin-table tr:hover {
+      background: var(--bg-glass);
+    }
+
+    .admin-table .title-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .admin-table .thumb {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, rgba(0,240,255,0.1), rgba(255,0,255,0.1));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .status-badge.published {
+      background: rgba(0, 255, 136, 0.1);
+      color: var(--success);
+    }
+
+    .status-badge.draft {
+      background: rgba(255, 193, 7, 0.1);
+      color: #ffc107;
+    }
+
+    .action-btns {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .action-btn {
+      padding: 0.4rem 0.8rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all var(--transition-fast);
+    }
+
+    .action-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .action-btn.danger:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* Forms */
+    .admin-form {
+      max-width: 600px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      transition: all var(--transition-fast);
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+    }
+
+    .form-group textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    /* Page Sections */
+    .admin-page {
+      display: none;
+    }
+
+    .admin-page.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    /* Editor */
+    .editor-toolbar {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-color);
+      border-bottom: none;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .editor-toolbar button {
+      padding: 0.5rem 0.75rem;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all var(--transition-fast);
+    }
+
+    .editor-toolbar button:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* Messages */
+    .message-item {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .message-item:last-child {
+      border-bottom: none;
+    }
+
+    .message-avatar {
+      width: 45px;
+      height: 45px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .message-content {
+      flex: 1;
+    }
+
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .message-name {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .message-date {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .message-text {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .message-email {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    /* Tabs */
+    .admin-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .admin-tab {
+      padding: 0.6rem 1.2rem;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .admin-tab:hover {
+      border-color: var(--primary);
+    }
+
+    .admin-tab.active {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: var(--bg-dark);
+      border-color: transparent;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .admin-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .admin-sidebar {
+        transform: translateX(-100%);
+        z-index: 1000;
+      }
+
+      .admin-sidebar.open {
+        transform: translateX(0);
+      }
+
+      .admin-main {
+        margin-left: 0;
+      }
+
+      .admin-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all var(--transition-normal);
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: scale(0.9);
+      transition: transform var(--transition-normal);
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: all var(--transition-fast);
+    }
+
+    .modal-close:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="admin-logo">
+        <div class="logo-icon">🐻</div>
+        <span>大熊的AI世界</span>
+      </div>
+      <ul class="admin-nav">
+        <li class="admin-nav-item">
+          <a class="admin-nav-link active" data-page="dashboard">
+            <span class="icon">📊</span>
+            <span>数据概览</span>
+          </a>
+        </li>
+        <li class="admin-nav-item">
+          <a class="admin-nav-link" data-page="profile">
+            <span class="icon">👤</span>
+            <span>个人资料</span>
+          </a>
+        </li>
+        <li class="admin-nav-item">
+          <a class="admin-nav-link" data-page="articles">
+            <span class="icon">📝</span>
+            <span>文章管理</span>
+          </a>
+        </li>
+        <li class="admin-nav-item">
+          <a class="admin-nav-link" data-page="projects">
+            <span class="icon">🛠️</span>
+            <span>项目管理</span>
+          </a>
+        </li>
+        <li class="admin-nav-item">
+          <a class="admin-nav-link" data-page="messages">
+            <span class="icon">💬</span>
+            <span>留言管理</span>
+          </a>
+        </li>
+        <li class="admin-nav-item">
+          <a class="admin-nav-link" href="/">
+            <span class="icon">🌐</span>
+            <span>查看站点</span>
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <!-- Dashboard Page -->
+      <div class="admin-page active" id="page-dashboard">
+        <div class="admin-header">
+          <h1>数据概览</h1>
+          <div class="admin-user">
+            <span id="adminUsername">大熊</span>
+            <div class="admin-user-avatar" id="adminAvatar">🐻</div>
+          </div>
+        </div>
+
+        <div class="admin-stats">
+          <div class="admin-stat-card">
+            <div class="admin-stat-icon">📄</div>
+            <div class="admin-stat-value" id="statArticles">0</div>
+            <div class="admin-stat-label">文章总数</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-icon">🛠️</div>
+            <div class="admin-stat-value" id="statProjects">0</div>
+            <div class="admin-stat-label">项目总数</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-icon">👁️</div>
+            <div class="admin-stat-value" id="statViews">0</div>
+            <div class="admin-stat-label">总阅读量</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-icon">💬</div>
+            <div class="admin-stat-value" id="statComments">0</div>
+            <div class="admin-stat-label">留言数量</div>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3 class="admin-card-title">📈 近期数据</h3>
+          </div>
+          <div class="admin-tabs">
+            <button class="admin-tab active" data-range="7">近7天</button>
+            <button class="admin-tab" data-range="30">近30天</button>
+            <button class="admin-tab" data-range="90">近90天</button>
+          </div>
+          <div id="chartContainer" style="height: 200px; display: flex; align-items: flex-end; gap: 0.5rem; padding: 1rem 0;">
+            <!-- Chart bars will be generated here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Page -->
+      <div class="admin-page" id="page-profile">
+        <div class="admin-header">
+          <h1>个人资料</h1>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3 class="admin-card-title">👤 账号信息</h3>
+          </div>
+          <form class="admin-form" id="profileForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label>用户名</label>
+                <input type="text" id="profileUsername" value="大熊" readonly>
+              </div>
+              <div class="form-group">
+                <label>邮箱</label>
+                <input type="email" id="profileEmail" value="bear@example.com" readonly>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>个人简介</label>
+              <textarea id="profileBio" placeholder="介绍一下你自己...">热爱AI与技术的探索者，致力于分享AI知识和工具</textarea>
+            </div>
+            <div class="form-group">
+              <label>头像 URL</label>
+              <input type="text" id="profileAvatarUrl" placeholder="输入头像图片链接">
+            </div>
+            <button type="submit" class="btn btn-primary">保存更改</button>
+          </form>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3 class="admin-card-title">🔐 密码修改</h3>
+          </div>
+          <form class="admin-form" id="passwordForm">
+            <div class="form-group">
+              <label>当前密码</label>
+              <input type="password" id="currentPassword" placeholder="输入当前密码">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>新密码</label>
+                <input type="password" id="newPassword" placeholder="输入新密码">
+              </div>
+              <div class="form-group">
+                <label>确认密码</label>
+                <input type="password" id="confirmPassword" placeholder="再次输入新密码">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-secondary">修改密码</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Articles Page -->
+      <div class="admin-page" id="page-articles">
+        <div class="admin-header">
+          <h1>文章管理</h1>
+          <button class="btn btn-primary" onclick="openArticleModal()">+ 发布文章</button>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3 class="admin-card-title">📝 所有文章</h3>
+            <input type="text" placeholder="搜索文章..." style="padding: 0.5rem 1rem; background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);" id="articleSearch">
+          </div>
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>标题</th>
+                <th>分类</th>
+                <th>阅读</th>
+                <th>状态</th>
+                <th>日期</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="articlesTable">
+              <!-- Articles will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Projects Page -->
+      <div class="admin-page" id="page-projects">
+        <div class="admin-header">
+          <h1>项目管理</h1>
+          <button class="btn btn-primary" onclick="openProjectModal()">+ 添加项目</button>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3 class="admin-card-title">🛠️ 所有项目</h3>
+          </div>
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>项目</th>
+                <th>技术栈</th>
+                <th>展示</th>
+                <th>日期</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="projectsTable">
+              <!-- Projects will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Messages Page -->
+      <div class="admin-page" id="page-messages">
+        <div class="admin-header">
+          <h1>留言管理</h1>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <h3 class="admin-card-title">💬 所有留言</h3>
+          </div>
+          <div id="messagesList">
+            <!-- Messages will be loaded here -->
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Article Modal -->
+  <div class="modal-overlay" id="articleModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">发布文章</h3>
+        <button class="modal-close" onclick="closeArticleModal()">×</button>
+      </div>
+      <form id="articleForm">
+        <div class="form-group">
+          <label>标题</label>
+          <input type="text" id="articleTitle" placeholder="输入文章标题" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>分类</label>
+            <select id="articleCategory">
+              <option value="AI教程">AI教程</option>
+              <option value="项目案例">项目案例</option>
+              <option value="个人动态">个人动态</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>标签</label>
+            <input type="text" id="articleTags" placeholder="用逗号分隔">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>摘要</label>
+          <textarea id="articleExcerpt" placeholder="输入文章摘要" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label>内容 (支持Markdown)</label>
+          <textarea id="articleContent" placeholder="输入文章内容..." rows="8"></textarea>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+          <button type="submit" class="btn btn-primary" style="flex: 1;">发布</button>
+          <button type="button" class="btn btn-secondary" onclick="closeArticleModal()">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Project Modal -->
+  <div class="modal-overlay" id="projectModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">添加项目</h3>
+        <button class="modal-close" onclick="closeProjectModal()">×</button>
+      </div>
+      <form id="projectForm">
+        <div class="form-group">
+          <label>项目名称</label>
+          <input type="text" id="projectTitle" placeholder="输入项目名称" required>
+        </div>
+        <div class="form-group">
+          <label>描述</label>
+          <textarea id="projectDescription" placeholder="简短描述项目" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label>详细介绍</label>
+          <textarea id="projectContent" placeholder="详细介绍项目功能" rows="4"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Demo URL</label>
+            <input type="text" id="projectDemoUrl" placeholder="演示链接">
+          </div>
+          <div class="form-group">
+            <label>GitHub URL</label>
+            <input type="text" id="projectGithubUrl" placeholder="GitHub链接">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>技术栈</label>
+          <input type="text" id="projectTechStack" placeholder="用逗号分隔，如: React, Node.js">
+        </div>
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 0.5rem;">
+            <input type="checkbox" id="projectFeatured" style="width: auto;">
+            设为精选项目
+          </label>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+          <button type="submit" class="btn btn-primary" style="flex: 1;">保存</button>
+          <button type="button" class="btn btn-secondary" onclick="closeProjectModal()">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/main.js"></script>
+  <script>
+    // Data storage
+    let articles = [];
+    let projects = [];
+    let messages = [];
+    let currentUser = { username: '大熊', email: 'bear@example.com', bio: '热爱AI与技术的探索者' };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initNavigation();
+      initForms();
+      loadData();
+      generateChart();
+    });
+
+    // Navigation
+    function initNavigation() {
+      const navLinks = document.querySelectorAll('.admin-nav-link[data-page]');
+      navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+          navLinks.forEach(l => l.classList.remove('active'));
+          link.classList.add('active');
+
+          const page = link.dataset.page;
+          document.querySelectorAll('.admin-page').forEach(p => p.classList.remove('active'));
+          document.getElementById('page-' + page).classList.add('active');
+        });
+      });
+    }
+
+    // Forms
+    function initForms() {
+      // Profile form
+      document.getElementById('profileForm')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        currentUser.bio = document.getElementById('profileBio').value;
+        showToast('资料已更新', 'success');
+      });
+
+      // Password form
+      document.getElementById('passwordForm')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newPass = document.getElementById('newPassword').value;
+        const confirmPass = document.getElementById('confirmPassword').value;
+        if (newPass !== confirmPass) {
+          showToast('两次密码不一致', 'error');
+          return;
+        }
+        showToast('密码已修改', 'success');
+        e.target.reset();
+      });
+
+      // Article form
+      document.getElementById('articleForm')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const article = {
+          id: Date.now(),
+          title: document.getElementById('articleTitle').value,
+          category: document.getElementById('articleCategory').value,
+          tags: document.getElementById('articleTags').value,
+          excerpt: document.getElementById('articleExcerpt').value,
+          content: document.getElementById('articleContent').value,
+          author: currentUser.username,
+          views: 0,
+          created_at: new Date().toISOString().split('T')[0]
+        };
+        articles.unshift(article);
+        renderArticles();
+        closeArticleModal();
+        showToast('文章已发布', 'success');
+      });
+
+      // Project form
+      document.getElementById('projectForm')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const project = {
+          id: Date.now(),
+          title: document.getElementById('projectTitle').value,
+          description: document.getElementById('projectDescription').value,
+          content: document.getElementById('projectContent').value,
+          demo_url: document.getElementById('projectDemoUrl').value,
+          github_url: document.getElementById('projectGithubUrl').value,
+          tech_stack: document.getElementById('projectTechStack').value,
+          featured: document.getElementById('projectFeatured').checked ? 1 : 0,
+          created_at: new Date().toISOString().split('T')[0]
+        };
+        projects.unshift(project);
+        renderProjects();
+        closeProjectModal();
+        showToast('项目已添加', 'success');
+      });
+    }
+
+    // Load data
+    async function loadData() {
+      // Load stats
+      try {
+        const stats = await getStats();
+        document.getElementById('statArticles').textContent = stats.data.articles;
+        document.getElementById('statProjects').textContent = stats.data.projects;
+        document.getElementById('statViews').textContent = formatNumber(stats.data.views);
+        document.getElementById('statComments').textContent = stats.data.comments;
+      } catch (e) {
+        console.error('Failed to load stats');
+      }
+
+      // Load articles
+      try {
+        const articlesData = await getArticles();
+        articles = articlesData.data.articles;
+        renderArticles();
+      } catch (e) {
+        articles = [
+          { id: 1, title: 'ChatGPT提示词工程完全指南', slug: 'chatgpt-prompt-engineering-guide', category: 'AI教程', views: 150, created_at: '2024-01-15' },
+          { id: 2, title: 'AI图像生成工具横向评测', slug: 'ai-image-generation-tools-comparison', category: '其他', views: 120, created_at: '2024-01-10' },
+          { id: 3, title: '我的第一个AI项目', slug: 'my-first-ai-project', category: '项目案例', views: 200, created_at: '2024-01-05' }
+        ];
+        renderArticles();
+      }
+
+      // Load projects
+      try {
+        const projectsData = await getProjects();
+        projects = projectsData.data;
+        renderProjects();
+      } catch (e) {
+        projects = [
+          { id: 1, title: 'AI写作助手', tech_stack: 'React, Node.js', featured: 1, created_at: '2024-01-10' },
+          { id: 2, title: '智能图像识别系统', tech_stack: 'Python, PyTorch', featured: 1, created_at: '2024-01-05' }
+        ];
+        renderProjects();
+      }
+
+      // Load messages
+      loadMessages();
+    }
+
+    function formatNumber(num) {
+      if (num >= 10000) return (num / 10000).toFixed(1) + 'w';
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+      return num.toString();
+    }
+
+    // Render functions
+    function renderArticles() {
+      const tbody = document.getElementById('articlesTable');
+      tbody.innerHTML = articles.map(a => `
+        <tr>
+          <td>
+            <div class="title-cell">
+              <div class="thumb">📄</div>
+              <div>
+                <strong>${a.title}</strong>
+              </div>
+            </div>
+          </td>
+          <td><span class="status-badge published">${a.category}</span></td>
+          <td>${a.views || 0}</td>
+          <td><span class="status-badge published">已发布</span></td>
+          <td>${a.created_at}</td>
+          <td>
+            <div class="action-btns">
+              <button class="action-btn" onclick="editArticle(${a.id})">编辑</button>
+              <button class="action-btn danger" onclick="deleteArticle(${a.id})">删除</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderProjects() {
+      const tbody = document.getElementById('projectsTable');
+      tbody.innerHTML = projects.map(p => `
+        <tr>
+          <td>
+            <div class="title-cell">
+              <div class="thumb">🛠️</div>
+              <strong>${p.title}</strong>
+            </div>
+          </td>
+          <td>${p.tech_stack || '-'}</td>
+          <td>${p.featured ? '<span class="status-badge published">精选</span>' : '<span class="status-badge draft">普通</span>'}</td>
+          <td>${p.created_at}</td>
+          <td>
+            <div class="action-btns">
+              <button class="action-btn" onclick="editProject(${p.id})">编辑</button>
+              <button class="action-btn danger" onclick="deleteProject(${p.id})">删除</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function loadMessages() {
+      const container = document.getElementById('messagesList');
+      container.innerHTML = `
+        <div class="message-item">
+          <div class="message-avatar">访</div>
+          <div class="message-content">
+            <div class="message-header">
+              <span class="message-name">访客小明</span>
+              <span class="message-date">2024-01-15</span>
+            </div>
+            <p class="message-text">网站做得真棒！赛博朋克风格很有科技感。</p>
+            <p class="message-email">xiaoming@example.com</p>
+          </div>
+        </div>
+        <div class="message-item">
+          <div class="message-avatar">A</div>
+          <div class="message-content">
+            <div class="message-header">
+              <span class="message-name">AI爱好者</span>
+              <span class="message-date">2024-01-12</span>
+            </div>
+            <p class="message-text">大熊哥，AI教程写得非常好，期待更多内容！</p>
+            <p class="message-email">ai_fan@163.com</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // Chart
+    function generateChart() {
+      const container = document.getElementById('chartContainer');
+      const data = [65, 80, 45, 90, 70, 85, 60];
+      const max = Math.max(...data);
+      container.innerHTML = data.map((value, i) => `
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+          <div style="width: 100%; background: linear-gradient(180deg, var(--primary), rgba(0,240,255,0.3)); border-radius: 4px 4px 0 0; height: ${(value / max) * 150}px; transition: height 0.5s ease;"></div>
+          <span style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.5rem;">周${i + 1}</span>
+        </div>
+      `).join('');
+    }
+
+    // Modal functions
+    function openArticleModal() {
+      document.getElementById('articleModal').classList.add('active');
+      document.getElementById('articleForm').reset();
+    }
+
+    function closeArticleModal() {
+      document.getElementById('articleModal').classList.remove('active');
+    }
+
+    function openProjectModal() {
+      document.getElementById('projectModal').classList.add('active');
+      document.getElementById('projectForm').reset();
+    }
+
+    function closeProjectModal() {
+      document.getElementById('projectModal').classList.remove('active');
+    }
+
+    // CRUD operations
+    function editArticle(id) {
+      const article = articles.find(a => a.id === id);
+      if (article) {
+        document.getElementById('articleTitle').value = article.title;
+        document.getElementById('articleCategory').value = article.category;
+        document.getElementById('articleExcerpt').value = article.excerpt || '';
+        document.getElementById('articleContent').value = article.content || '';
+        openArticleModal();
+      }
+    }
+
+    function deleteArticle(id) {
+      if (confirm('确定要删除这篇文章吗？')) {
+        articles = articles.filter(a => a.id !== id);
+        renderArticles();
+        showToast('文章已删除', 'success');
+      }
+    }
+
+    function editProject(id) {
+      const project = projects.find(p => p.id === id);
+      if (project) {
+        document.getElementById('projectTitle').value = project.title;
+        document.getElementById('projectDescription').value = project.description || '';
+        document.getElementById('projectContent').value = project.content || '';
+        document.getElementById('projectDemoUrl').value = project.demo_url || '';
+        document.getElementById('projectGithubUrl').value = project.github_url || '';
+        document.getElementById('projectTechStack').value = project.tech_stack || '';
+        document.getElementById('projectFeatured').checked = project.featured === 1;
+        openProjectModal();
+      }
+    }
+
+    function deleteProject(id) {
+      if (confirm('确定要删除这个项目吗？')) {
+        projects = projects.filter(p => p.id !== id);
+        renderProjects();
+        showToast('项目已删除', 'success');
+      }
+    }
+
+    // Close modals on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

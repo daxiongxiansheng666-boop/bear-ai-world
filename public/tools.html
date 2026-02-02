@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI工具 - 大熊的AI世界</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <style>
+    .tools-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .tool-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    .tool-header {
+      padding: 1.5rem;
+      background: linear-gradient(135deg, rgba(0,240,255,0.05), rgba(255,0,255,0.05));
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .tool-icon {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .tool-info h3 {
+      margin-bottom: 0.25rem;
+    }
+
+    .tool-info p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin: 0;
+    }
+
+    .tool-body {
+      padding: 1.5rem;
+    }
+
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 500px;
+    }
+
+    .chat-messages-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      background: var(--bg-glass);
+      border-radius: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .chat-message {
+      margin-bottom: 1rem;
+      animation: messageSlide 0.3s ease;
+    }
+
+    @keyframes messageSlide {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chat-message.assistant .message-bubble {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-message.user .message-bubble {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--bg-dark);
+      border-bottom-right-radius: 4px;
+      margin-left: auto;
+      max-width: 80%;
+    }
+
+    .message-bubble {
+      padding: 1rem 1.25rem;
+      border-radius: 16px;
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+
+    .chat-input-row textarea {
+      flex: 1;
+      padding: 1rem;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      resize: none;
+      min-height: 60px;
+      max-height: 150px;
+    }
+
+    .chat-input-row textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .prompt-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .prompt-chip {
+      padding: 0.4rem 0.8rem;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-color);
+      border-radius: 50px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .prompt-chip:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* 其他工具卡片 */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .mini-tool-card {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all var(--transition-normal);
+    }
+
+    .mini-tool-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-3px);
+    }
+
+    .mini-tool-card h4 {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .mini-tool-card p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- 背景特效 -->
+  <div class="background-effects">
+    <div class="grid-overlay"></div>
+    <canvas id="particles-canvas"></canvas>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+  </div>
+
+  <!-- 导航栏 -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">
+        <div class="logo-icon">🐻</div>
+        <span>大熊的AI世界</span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/" class="nav-link">首页</a></li>
+        <li><a href="/blog.html" class="nav-link">博客</a></li>
+        <li><a href="/projects.html" class="nav-link">项目</a></li>
+        <li><a href="/tools.html" class="nav-link active">AI工具</a></li>
+        <li><a href="/knowledge.html" class="nav-link">知识库</a></li>
+      </ul>
+      <div class="nav-actions" id="navActions"></div>
+      <button class="mobile-toggle" id="mobileToggle"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <!-- 页面头部 -->
+  <section class="hero" style="min-height: 40vh; padding-top: 8rem;">
+    <div class="hero-content">
+      <h1 class="hero-title" style="font-size: clamp(2rem, 5vw, 3rem);">
+        🤖 <span class="gradient-text">AI工具平台</span>
+      </h1>
+      <p class="hero-subtitle">
+        集成多种AI能力，让AI成为你的得力助手
+      </p>
+    </div>
+  </section>
+
+  <!-- 工具区域 -->
+  <section class="section" style="padding-top: 0;">
+    <div class="tools-container">
+      <!-- 主要对话工具 -->
+      <div class="tool-panel animate-on-scroll">
+        <div class="tool-header">
+          <div class="tool-icon">💬</div>
+          <div class="tool-info">
+            <h3>智能对话助手</h3>
+            <p>基于大语言模型的对话系统，可以回答问题、写作、编程辅助</p>
+          </div>
+        </div>
+        <div class="tool-body">
+          <div class="chat-container">
+            <div class="chat-messages-area" id="chatMessages">
+              <div class="chat-message assistant">
+                <div class="message-bubble">
+                  你好！我是AI助手。你可以问我任何问题，我会尽力帮助你。😊
+                </div>
+              </div>
+            </div>
+            <div class="chat-input-row">
+              <textarea id="chatInput" placeholder="输入你的问题..."></textarea>
+              <button class="btn btn-primary" id="sendBtn">发送</button>
+            </div>
+            <div class="prompt-chips">
+              <span class="prompt-chip" data-prompt="帮我解释什么是机器学习？">解释机器学习</span>
+              <span class="prompt-chip" data-prompt="写一个Python函数实现快速排序">快速排序代码</span>
+              <span class="prompt-chip" data-prompt="帮我写一封商务邮件">商务邮件</span>
+              <span class="prompt-chip" data-prompt="AI有哪些应用场景？">AI应用场景</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 其他工具 -->
+      <div class="section-header" style="margin-top: 3rem;">
+        <h2 class="section-title" style="font-size: 1.5rem;">更多工具</h2>
+        <div class="section-divider" style="margin: 1rem 0;"></div>
+      </div>
+
+      <div class="tools-grid">
+        <div class="mini-tool-card animate-on-scroll">
+          <h4>📝 <span style="color: var(--text-primary);">文章润色</span></h4>
+          <p>AI帮你优化文章结构、提升表达、修正语法错误</p>
+          <button class="btn btn-secondary" style="width: 100%;">使用工具</button>
+        </div>
+        <div class="mini-tool-card animate-on-scroll">
+          <h4>💻 <span style="color: var(--text-primary);">代码助手</span></h4>
+          <p>代码生成、Debug、解释代码逻辑、优化性能</p>
+          <button class="btn btn-secondary" style="width: 100%;">使用工具</button>
+        </div>
+        <div class="mini-tool-card animate-on-scroll">
+          <h4>🎨 <span style="color: var(--text-primary);">创意头脑风暴</span></h4>
+          <p>激发创意灵感、提供创意方案、思维导图生成</p>
+          <button class="btn btn-secondary" style="width: 100%;">使用工具</button>
+        </div>
+        <div class="mini-tool-card animate-on-scroll">
+          <h4>📊 <span style="color: var(--text-primary);">数据分析</span></h4>
+          <p>数据解读、趋势分析、可视化建议</p>
+          <button class="btn btn-secondary" style="width: 100%;">使用工具</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="footer">
+    <div class="footer-bottom" style="max-width: 1200px; margin: 0 auto; padding-top: 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: 0.85rem;">
+      <p>&copy; 2024 大熊的AI世界. All rights reserved.</p>
+      <p>Made with ❤️ and AI</p>
+    </div>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/main.js"></script>
+  <script>
+    let currentUser = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initParticles();
+      initNavbar();
+      checkAuth();
+      initChat();
+    });
+
+    function initParticles() {
+      const canvas = document.getElementById('particles-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      resize();
+      window.addEventListener('resize', resize);
+      class Particle {
+        constructor() { this.reset(); }
+        reset() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.vx = (Math.random() - 0.5) * 0.5;
+          this.vy = (Math.random() - 0.5) * 0.5;
+          this.size = Math.random() * 2 + 1;
+          this.opacity = Math.random() * 0.5 + 0.2;
+        }
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0, 240, 255, ${this.opacity})`;
+          ctx.fill();
+        }
+      }
+      for (let i = 0; i < 50; i++) particles.push(new Particle());
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    function initNavbar() {
+      const navbar = document.getElementById('navbar');
+      const mobileToggle = document.getElementById('mobileToggle');
+      const navLinks = document.getElementById('navLinks');
+      window.addEventListener('scroll', () => { navbar.classList.toggle('scrolled', window.scrollY > 50); });
+      mobileToggle?.addEventListener('click', () => {
+        mobileToggle.classList.toggle('active');
+        navLinks.classList.toggle('active');
+      });
+    }
+
+    async function checkAuth() {
+      const token = localStorage.getItem('bear_ai_token');
+      if (token) {
+        try {
+          currentUser = await getCurrentUser();
+          updateNavAuth();
+        } catch (e) { localStorage.removeItem('bear_ai_token'); }
+      }
+    }
+
+    function updateNavAuth() {
+      const navActions = document.getElementById('navActions');
+      if (!navActions) return;
+      if (currentUser) {
+        navActions.innerHTML = `<div class="user-menu"><button class="user-avatar-btn">${currentUser.username[0].toUpperCase()}</button><div class="user-dropdown"><a href="/profile.html">👤 个人中心</a><a href="#" onclick="handleLogout(); return false;">🚪 退出登录</a></div></div>`;
+      } else {
+        navActions.innerHTML = `<a href="/login.html" class="btn btn-ghost">登录</a><a href="/register.html" class="btn btn-primary">注册</a>`;
+      }
+    }
+
+    window.handleLogout = function() {
+      logout();
+      currentUser = null;
+      updateNavAuth();
+      showToast('已退出登录', 'success');
+    };
+
+    function initChat() {
+      const chatInput = document.getElementById('chatInput');
+      const sendBtn = document.getElementById('sendBtn');
+      const chatMessages = document.getElementById('chatMessages');
+      const promptChips = document.querySelectorAll('.prompt-chip');
+
+      const sendMessage = async () => {
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        addMessage(message, 'user');
+        chatInput.value = '';
+
+        const loadingId = addLoading();
+        try {
+          const data = await sendAIMessage(message);
+          removeLoading(loadingId);
+          addMessage(data.data.response, 'assistant');
+        } catch (e) {
+          removeLoading(loadingId);
+          addMessage('抱歉，出错了。请稍后再试。', 'assistant');
+        }
+      };
+
+      sendBtn.addEventListener('click', sendMessage);
+      chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+      promptChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          chatInput.value = chip.dataset.prompt;
+          chatInput.focus();
+        });
+      });
+    }
+
+    function addMessage(content, type) {
+      const chatMessages = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = `chat-message ${type}`;
+      div.innerHTML = `<div class="message-bubble">${formatMessage(content)}</div>`;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addLoading() {
+      const id = 'loading-' + Date.now();
+      const chatMessages = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = 'chat-message assistant';
+      div.id = id;
+      div.innerHTML = `<div class="message-bubble" style="display: flex; align-items: center; gap: 0.5rem;"><div class="loading-spinner" style="width: 20px; height: 20px; border-width: 2px;"></div><span>思考中...</span></div>`;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      return id;
+    }
+
+    function removeLoading(id) {
+      const div = document.getElementById(id);
+      if (div) div.remove();
+    }
+
+    function formatMessage(content) {
+      return content.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\n/g, '<br>');
+    }
+  </script>
+</body>
+</html>

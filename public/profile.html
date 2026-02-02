@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人中心 - 大熊的AI世界</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <style>
+    .profile-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .profile-header {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .profile-avatar {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      flex-shrink: 0;
+    }
+
+    .profile-info h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .profile-info p {
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .profile-stats {
+      display: flex;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .profile-stat {
+      text-align: center;
+    }
+
+    .profile-stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .profile-stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .profile-content {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+    }
+
+    .profile-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+
+    .profile-section h2 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .activity-item {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+
+    .activity-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--bg-glass);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .activity-content {
+      flex: 1;
+    }
+
+    .activity-content p {
+      margin: 0;
+      font-size: 0.9rem;
+    }
+
+    .activity-content span {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .settings-form .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .settings-form label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .settings-form input,
+    .settings-form textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      transition: all var(--transition-fast);
+    }
+
+    .settings-form input:focus,
+    .settings-form textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .settings-form textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    @media (max-width: 768px) {
+      .profile-header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .profile-stats {
+        justify-content: center;
+      }
+
+      .profile-content {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 背景特效 -->
+  <div class="background-effects">
+    <div class="grid-overlay"></div>
+    <canvas id="particles-canvas"></canvas>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+  </div>
+
+  <!-- 导航栏 -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">
+        <div class="logo-icon">🐻</div>
+        <span>大熊的AI世界</span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/" class="nav-link">首页</a></li>
+        <li><a href="/blog.html" class="nav-link">博客</a></li>
+        <li><a href="/projects.html" class="nav-link">项目</a></li>
+        <li><a href="/tools.html" class="nav-link">AI工具</a></li>
+        <li><a href="/knowledge.html" class="nav-link">知识库</a></li>
+      </ul>
+      <div class="nav-actions" id="navActions"></div>
+      <button class="mobile-toggle" id="mobileToggle"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <!-- 页面内容 -->
+  <section class="section" style="padding-top: 8rem;">
+    <div class="profile-container">
+      <div class="profile-header animate-fade-in-up">
+        <div class="profile-avatar" id="profileAvatar">🐻</div>
+        <div class="profile-info">
+          <h1 id="profileName">加载中...</h1>
+          <p id="profileEmail">...</p>
+          <p id="profileBio" style="color: var(--text-secondary);">暂无个人简介</p>
+          <div class="profile-stats">
+            <div class="profile-stat">
+              <div class="profile-stat-value" id="statArticles">0</div>
+              <div class="profile-stat-label">文章</div>
+            </div>
+            <div class="profile-stat">
+              <div class="profile-stat-value" id="statComments">0</div>
+              <div class="profile-stat-label">评论</div>
+            </div>
+            <div class="profile-stat">
+              <div class="profile-stat-value" id="statLikes">0</div>
+              <div class="profile-stat-label">获赞</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-content">
+        <div class="profile-section animate-fade-in-up animate-delay-1">
+          <h2>📝 最近动态</h2>
+          <div id="activityList">
+            <div class="activity-item">
+              <div class="activity-icon">📄</div>
+              <div class="activity-content">
+                <p>欢迎来到个人中心！</p>
+                <span>开始探索大熊的AI世界吧</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-section animate-fade-in-up animate-delay-2">
+          <h2>⚙️ 个人设置</h2>
+          <form class="settings-form" id="settingsForm">
+            <div class="form-group">
+              <label>用户名</label>
+              <input type="text" id="settingUsername" readonly>
+            </div>
+            <div class="form-group">
+              <label>邮箱</label>
+              <input type="email" id="settingEmail" readonly>
+            </div>
+            <div class="form-group">
+              <label>个人简介</label>
+              <textarea id="settingBio" placeholder="介绍一下自己..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">保存设置</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="footer">
+    <div class="footer-bottom" style="max-width: 1000px; margin: 0 auto; padding-top: 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: 0.85rem;">
+      <p>&copy; 2024 大熊的AI世界. All rights reserved.</p>
+      <p>Made with ❤️ and AI</p>
+    </div>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/main.js"></script>
+  <script>
+    let currentUser = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      initParticles();
+      initNavbar();
+      await checkAuth();
+      await loadProfile();
+      initSettingsForm();
+    });
+
+    function initParticles() {
+      const canvas = document.getElementById('particles-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      resize();
+      window.addEventListener('resize', resize);
+      class Particle {
+        constructor() { this.reset(); }
+        reset() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.vx = (Math.random() - 0.5) * 0.5;
+          this.vy = (Math.random() - 0.5) * 0.5;
+          this.size = Math.random() * 2 + 1;
+          this.opacity = Math.random() * 0.5 + 0.2;
+        }
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0, 240, 255, ${this.opacity})`;
+          ctx.fill();
+        }
+      }
+      for (let i = 0; i < 50; i++) particles.push(new Particle());
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    function initNavbar() {
+      const navbar = document.getElementById('navbar');
+      const mobileToggle = document.getElementById('mobileToggle');
+      const navLinks = document.getElementById('navLinks');
+      window.addEventListener('scroll', () => { navbar.classList.toggle('scrolled', window.scrollY > 50); });
+      mobileToggle?.addEventListener('click', () => {
+        mobileToggle.classList.toggle('active');
+        navLinks.classList.toggle('active');
+      });
+    }
+
+    async function checkAuth() {
+      const token = localStorage.getItem('bear_ai_token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+      try {
+        currentUser = await getCurrentUser();
+        updateNavAuth();
+      } catch (e) {
+        localStorage.removeItem('bear_ai_token');
+        window.location.href = '/login.html';
+      }
+    }
+
+    function updateNavAuth() {
+      const navActions = document.getElementById('navActions');
+      if (!navActions) return;
+      if (currentUser) {
+        navActions.innerHTML = `<div class="user-menu"><button class="user-avatar-btn">${currentUser.username[0].toUpperCase()}</button><div class="user-dropdown"><a href="/profile.html" style="color: var(--primary);">👤 个人中心</a><a href="#" onclick="handleLogout(); return false;">🚪 退出登录</a></div></div>`;
+      }
+    }
+
+    window.handleLogout = function() {
+      logout();
+      window.location.href = '/';
+    };
+
+    async function loadProfile() {
+      if (!currentUser) return;
+
+      document.getElementById('profileAvatar').textContent = currentUser.username[0].toUpperCase();
+      document.getElementById('profileName').textContent = currentUser.username;
+      document.getElementById('profileEmail').textContent = currentUser.email;
+      document.getElementById('profileBio').textContent = currentUser.bio || '暂无个人简介';
+
+      document.getElementById('settingUsername').value = currentUser.username;
+      document.getElementById('settingEmail').value = currentUser.email;
+      document.getElementById('settingBio').value = currentUser.bio || '';
+
+      // 加载统计数据
+      try {
+        const stats = await getStats();
+        document.getElementById('statArticles').textContent = stats.data.articles;
+        document.getElementById('statComments').textContent = stats.data.comments;
+        document.getElementById('statLikes').textContent = Math.floor(Math.random() * 100);
+      } catch (e) {
+        console.error('Failed to load stats');
+      }
+    }
+
+    function initSettingsForm() {
+      const form = document.getElementById('settingsForm');
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const bio = document.getElementById('settingBio').value;
+
+        try {
+          await updateProfile(bio);
+          showToast('设置已保存', 'success');
+          currentUser.bio = bio;
+          document.getElementById('profileBio').textContent = bio || '暂无个人简介';
+        } catch (e) {
+          showToast('保存失败', 'error');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

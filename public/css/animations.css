@@ -1,0 +1,797 @@
+/* ========================================
+   大熊的AI世界 - 动画效果
+   ======================================== */
+
+/* ========================================
+   基础动画
+   ======================================== */
+
+/* 淡入淡出 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.animate-fade-out {
+  animation: fadeOut 0.5s ease forwards;
+}
+
+/* 滑入滑出 */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-up { animation: slideInUp 0.6s ease forwards; }
+.animate-slide-in-down { animation: slideInDown 0.6s ease forwards; }
+.animate-slide-in-left { animation: slideInLeft 0.6s ease forwards; }
+.animate-slide-in-right { animation: slideInRight 0.6s ease forwards; }
+
+/* 缩放动画 */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes scalePulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s ease forwards;
+}
+
+.animate-scale-pulse {
+  animation: scalePulse 2s ease-in-out infinite;
+}
+
+/* 弹跳动画 */
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-20px); }
+  60% { transform: translateY(-10px); }
+}
+
+.animate-bounce {
+  animation: bounce 1s ease infinite;
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-bounce-in {
+  animation: bounceIn 0.6s ease forwards;
+}
+
+/* ========================================
+   赛博朋克特效动画
+   ======================================== */
+
+/* 霓虹闪烁 */
+@keyframes neonFlicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    opacity: 1;
+    text-shadow:
+      0 0 5px currentColor,
+      0 0 10px currentColor,
+      0 0 20px currentColor,
+      0 0 40px currentColor;
+  }
+  20%, 24%, 55% {
+    opacity: 0.5;
+    text-shadow: none;
+  }
+}
+
+.animate-neon-flicker {
+  animation: neonFlicker 3s infinite;
+}
+
+/* 霓虹光晕 */
+@keyframes neonGlow {
+  0%, 100% {
+    text-shadow:
+      0 0 5px var(--primary),
+      0 0 10px var(--primary),
+      0 0 20px var(--primary);
+  }
+  50% {
+    text-shadow:
+      0 0 10px var(--primary),
+      0 0 20px var(--primary),
+      0 0 40px var(--primary),
+      0 0 60px var(--primary);
+  }
+}
+
+.animate-neon-glow {
+  animation: neonGlow 2s ease-in-out infinite;
+}
+
+/* 边框流光 */
+@keyframes borderGlow {
+  0% {
+    border-color: var(--primary);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+  }
+  33% {
+    border-color: var(--secondary);
+    box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+  }
+  66% {
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(255, 107, 0, 0.3);
+  }
+  100% {
+    border-color: var(--primary);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+  }
+}
+
+.animate-border-glow {
+  animation: borderGlow 3s ease-in-out infinite;
+}
+
+/* 扫描线效果 */
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+.scanline::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(
+    transparent,
+    rgba(0, 240, 255, 0.05),
+    transparent
+  );
+  animation: scanline 4s linear infinite;
+  pointer-events: none;
+}
+
+/* 故障效果 */
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+@keyframes glitchText {
+  0% {
+    transform: translate(0);
+    clip-path: inset(0 0 0 0);
+  }
+  20% {
+    transform: translate(-3px, 1px);
+    clip-path: inset(10% 0 80% 0);
+  }
+  40% {
+    transform: translate(3px, -1px);
+    clip-path: inset(80% 0 10% 0);
+  }
+  60% {
+    transform: translate(-1px, 2px);
+    clip-path: inset(30% 0 50% 0);
+  }
+  80% {
+    transform: translate(1px, -2px);
+    clip-path: inset(60% 0 20% 0);
+  }
+  100% {
+    transform: translate(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.animate-glitch {
+  animation: glitch 0.5s ease-in-out;
+}
+
+.animate-glitch-text {
+  animation: glitchText 1s ease-in-out;
+}
+
+/* ========================================
+   3D效果
+   ======================================== */
+
+/* 3D翻转 */
+@keyframes flipInX {
+  from {
+    transform: perspective(400px) rotateX(90deg);
+    opacity: 0;
+  }
+  to {
+    transform: perspective(400px) rotateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes flipInY {
+  from {
+    transform: perspective(400px) rotateY(90deg);
+    opacity: 0;
+  }
+  to {
+    transform: perspective(400px) rotateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-flip-in-x {
+  animation: flipInX 0.8s ease forwards;
+  backface-visibility: hidden;
+}
+
+.animate-flip-in-y {
+  animation: flipInY 0.8s ease forwards;
+  backface-visibility: hidden;
+}
+
+/* 3D旋转 */
+@keyframes rotate3D {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+@keyframes rotate3DAlt {
+  from {
+    transform: rotateX(0deg);
+  }
+  to {
+    transform: rotateX(360deg);
+  }
+}
+
+.animate-rotate-3d {
+  animation: rotate3D 3s linear infinite;
+  transform-style: preserve-3d;
+}
+
+.animate-rotate-3d-alt {
+  animation: rotate3DAlt 3s linear infinite;
+  transform-style: preserve-3d;
+}
+
+/* ========================================
+   科技感动画
+   ======================================== */
+
+/* 数据加载效果 */
+@keyframes dataStream {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 0%;
+  }
+}
+
+.animate-data-stream {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 240, 255, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: dataStream 1.5s ease infinite;
+}
+
+/* 脉冲波 */
+@keyframes pulseWave {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.pulse-wave {
+  position: relative;
+}
+
+.pulse-wave::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  transform: translate(-50%, -50%);
+  animation: pulseWave 2s ease-out infinite;
+}
+
+/* 科技圆环 */
+@keyframes techRing {
+  0% {
+    transform: rotate(0deg);
+    stroke-dashoffset: 100;
+  }
+  50% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    transform: rotate(360deg);
+    stroke-dashoffset: 100;
+  }
+}
+
+.tech-ring {
+  position: relative;
+}
+
+.tech-ring::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border: 2px solid transparent;
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: techRing 1s linear infinite;
+}
+
+/* 数字滚动 */
+@keyframes numberCount {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 线条绘制 */
+@keyframes drawLine {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.draw-line {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: drawLine 2s ease forwards;
+}
+
+/* ========================================
+   粒子动画
+   ======================================== */
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: particleFloat 10s linear infinite;
+}
+
+@keyframes particleFloat {
+  0% {
+    transform: translateY(100vh) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* 连接线动画 */
+@keyframes connectLine {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
+/* ========================================
+   打字机效果
+   ======================================== */
+
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blinkCursor {
+  from, to { border-color: transparent; }
+  50% { border-color: var(--primary); }
+}
+
+.typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid var(--primary);
+  animation:
+    typewriter 3s steps(40, end),
+    blinkCursor 0.8s step-end infinite;
+}
+
+.typewriter-fast {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid var(--primary);
+  animation:
+    typewriter 1.5s steps(30, end),
+    blinkCursor 0.6s step-end infinite;
+}
+
+/* ========================================
+   弹性动画
+   ======================================== */
+
+@keyframes elastic {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.25); }
+  40% { transform: scale(0.75); }
+  50% { transform: scale(1.15); }
+  65% { transform: scale(0.95); }
+  75% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.animate-elastic {
+  animation: elastic 0.8s ease forwards;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* ========================================
+   悬停动画
+   ======================================== */
+
+/* 悬停上浮 */
+.hover-lift {
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 240, 255, 0.15);
+}
+
+/* 悬停放大 */
+.hover-zoom {
+  transition: transform var(--transition-normal);
+}
+
+.hover-zoom:hover {
+  transform: scale(1.05);
+}
+
+/* 悬停发光 */
+.hover-glow {
+  transition: box-shadow var(--transition-normal);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.4);
+}
+
+/* 悬停文字发光 */
+.hover-text-glow {
+  transition: text-shadow var(--transition-normal);
+}
+
+.hover-text-glow:hover {
+  text-shadow: 0 0 20px currentColor;
+}
+
+/* 悬停旋转 */
+.hover-rotate {
+  transition: transform var(--transition-normal);
+}
+
+.hover-rotate:hover {
+  transform: rotate(5deg) scale(1.05);
+}
+
+/* 悬停扫描效果 */
+.hover-scan::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 240, 255, 0.2),
+    transparent
+  );
+  transition: left var(--transition-normal);
+}
+
+.hover-scan:hover::before {
+  left: 100%;
+}
+
+/* ========================================
+   循环动画
+   ======================================== */
+
+/* 上下浮动 */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes floatAlt {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(10px); }
+}
+
+.animate-float-alt {
+  animation: floatAlt 3s ease-in-out infinite;
+}
+
+/* 左右摇摆 */
+@keyframes sway {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.animate-sway {
+  animation: sway 2s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+/* 旋转 */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 2s linear infinite;
+}
+
+.animate-spin-fast {
+  animation: spin 0.5s linear infinite;
+}
+
+/* 呼吸 */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+.animate-breathe {
+  animation: breathe 2s ease-in-out infinite;
+}
+
+/* ========================================
+   延迟类
+   ======================================== */
+
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-600 { animation-delay: 0.6s; }
+.delay-700 { animation-delay: 0.7s; }
+.delay-800 { animation-delay: 0.8s; }
+.delay-900 { animation-delay: 0.9s; }
+.delay-1000 { animation-delay: 1s; }
+
+/* ========================================
+   视差效果
+   ======================================== */
+
+.parallax {
+  transition: transform 0.1s ease-out;
+}
+
+/* ========================================
+   进度条动画
+   ======================================== */
+
+@keyframes progressFill {
+  from { width: 0; }
+}
+
+.progress-animate {
+  animation: progressFill 1.5s ease forwards;
+}
+
+/* 条纹加载 */
+@keyframes progressStripe {
+  from { background-position: 0 0; }
+  to { background-position: 30px 0; }
+}
+
+.progress-stripe {
+  background-image: linear-gradient(
+    45deg,
+    rgba(0, 240, 255, 0.1) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(0, 240, 255, 0.1) 50%,
+    rgba(0, 240, 255, 0.1) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 30px 30px;
+  animation: progressStripe 1s linear infinite;
+}
+
+/* ========================================
+   磁吸效果
+   ======================================== */
+
+.magnetic {
+  transition: transform var(--transition-fast);
+}
+
+/* ========================================
+   序列帧动画
+   ======================================== */
+
+@keyframes frameAnimation {
+  0% { opacity: 1; }
+  33% { opacity: 0; }
+  66% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.frame-sequence {
+  animation: frameAnimation 3s steps(1) infinite;
+}

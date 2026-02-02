@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>博客文章 - 大熊的AI世界</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/animations.css">
+</head>
+<body>
+  <!-- 背景特效 -->
+  <div class="background-effects">
+    <div class="grid-overlay"></div>
+    <canvas id="particles-canvas"></canvas>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+  </div>
+
+  <!-- 导航栏 -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">
+        <div class="logo-icon">🐻</div>
+        <span>大熊的AI世界</span>
+      </a>
+
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/" class="nav-link">首页</a></li>
+        <li><a href="/blog.html" class="nav-link active">博客</a></li>
+        <li><a href="/projects.html" class="nav-link">项目</a></li>
+        <li><a href="/tools.html" class="nav-link">AI工具</a></li>
+        <li><a href="/knowledge.html" class="nav-link">知识库</a></li>
+      </ul>
+
+      <div class="nav-actions" id="navActions"></div>
+
+      <button class="mobile-toggle" id="mobileToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 页面头部 -->
+  <section class="hero" style="min-height: 50vh; padding-top: 8rem;">
+    <div class="hero-content">
+      <h1 class="hero-title" style="font-size: clamp(2rem, 5vw, 3rem);">
+        📚 <span class="gradient-text">博客文章</span>
+      </h1>
+      <p class="hero-subtitle">
+        分享AI技术、教程和最新动态，与你一起成长
+      </p>
+    </div>
+  </section>
+
+  <!-- 博客列表 -->
+  <section class="section" style="padding-top: 0;">
+    <div class="tabs" style="margin-bottom: 3rem;">
+      <button class="tab-btn active" data-category="all">全部文章</button>
+      <button class="tab-btn" data-category="AI教程">AI教程</button>
+      <button class="tab-btn" data-category="项目案例">项目案例</button>
+      <button class="tab-btn" data-category="个人动态">个人动态</button>
+      <button class="tab-btn" data-category="其他">其他</button>
+    </div>
+
+    <div class="card-grid" id="articlesGrid" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));">
+      <!-- 动态加载 -->
+    </div>
+
+    <div style="text-align: center; margin-top: 3rem;">
+      <div class="loading-spinner" id="loadingSpinner" style="display: none; margin: 0 auto;"></div>
+      <p id="endMessage" style="color: var(--text-muted); display: none;">已加载全部文章</p>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="footer">
+    <div class="footer-bottom" style="max-width: 1200px; margin: 0 auto; padding-top: 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: 0.85rem;">
+      <p>&copy; 2024 大熊的AI世界. All rights reserved.</p>
+      <p>Made with ❤️ and AI</p>
+    </div>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/main.js"></script>
+  <script>
+    let currentPage = 1;
+    let currentCategory = 'all';
+    let hasMore = true;
+    let isLoading = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initParticles();
+      initNavbar();
+      initTabs();
+      checkAuth();
+      loadArticles();
+
+      // URL参数处理
+      const urlParams = new URLSearchParams(window.location.search);
+      const category = urlParams.get('category');
+      if (category) {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+          if (btn.dataset.category === category) {
+            btn.click();
+          }
+        });
+      }
+    });
+
+    function initParticles() {
+      const canvas = document.getElementById('particles-canvas');
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      class Particle {
+        constructor() {
+          this.reset();
+        }
+        reset() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.vx = (Math.random() - 0.5) * 0.5;
+          this.vy = (Math.random() - 0.5) * 0.5;
+          this.size = Math.random() * 2 + 1;
+          this.opacity = Math.random() * 0.5 + 0.2;
+        }
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+            this.reset();
+          }
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0, 240, 255, ${this.opacity})`;
+          ctx.fill();
+        }
+      }
+
+      for (let i = 0; i < 50; i++) {
+        particles.push(new Particle());
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    function initNavbar() {
+      const navbar = document.getElementById('navbar');
+      const mobileToggle = document.getElementById('mobileToggle');
+      const navLinks = document.getElementById('navLinks');
+
+      window.addEventListener('scroll', () => {
+        navbar.classList.toggle('scrolled', window.scrollY > 50);
+      });
+
+      mobileToggle?.addEventListener('click', () => {
+        mobileToggle.classList.toggle('active');
+        navLinks.classList.toggle('active');
+      });
+    }
+
+    function initTabs() {
+      document.querySelectorAll('.tab-btn').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          currentCategory = tab.dataset.category;
+          currentPage = 1;
+          hasMore = true;
+          document.getElementById('articlesGrid').innerHTML = '';
+          loadArticles();
+        });
+      });
+    }
+
+    async function loadArticles() {
+      if (isLoading || !hasMore) return;
+      isLoading = true;
+
+      document.getElementById('loadingSpinner').style.display = 'block';
+      document.getElementById('endMessage').style.display = 'none';
+
+      try {
+        const params = { page: currentPage, limit: 9 };
+        if (currentCategory !== 'all') params.category = currentCategory;
+
+        const data = await getArticles(params);
+
+        if (data.data.articles.length === 0) {
+          hasMore = false;
+          document.getElementById('endMessage').style.display = 'block';
+        } else {
+          const grid = document.getElementById('articlesGrid');
+          data.data.articles.forEach((article, i) => {
+            const card = createArticleCard(article);
+            grid.innerHTML += card;
+            setTimeout(() => {
+              const cards = grid.querySelectorAll('.article-card');
+              cards[cards.length - data.data.articles.length + i].style.opacity = '1';
+              cards[cards.length - data.data.articles.length + i].style.transform = 'translateY(0)';
+            }, i * 100);
+          });
+          currentPage++;
+        }
+      } catch (e) {
+        console.error('Failed to load articles:', e);
+      } finally {
+        isLoading = false;
+        document.getElementById('loadingSpinner').style.display = 'none';
+      }
+    }
+
+    function createArticleCard(article) {
+      const date = new Date(article.created_at).toLocaleDateString('zh-CN');
+      return `
+        <article class="card article-card" style="opacity: 0; transform: translateY(30px); transition: all 0.5s ease;">
+          <div class="article-card-image" style="background: linear-gradient(135deg, rgba(0,240,255,0.1), rgba(255,0,255,0.1)); display: flex; align-items: center; justify-content: center; font-size: 3rem;">
+            📄
+          </div>
+          <span class="article-card-category">${article.category}</span>
+          <h3 class="article-card-title">
+            <a href="/article.html?slug=${article.slug}">${article.title}</a>
+          </h3>
+          <p class="article-card-excerpt">${article.excerpt || ''}</p>
+          <div class="article-card-meta">
+            <span>👤 ${article.author}</span>
+            <span>📅 ${date}</span>
+            <span>👁 ${article.views || 0}</span>
+          </div>
+        </article>
+      `;
+    }
+
+    // 滚动加载更多
+    window.addEventListener('scroll', () => {
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
+        loadArticles();
+      }
+    });
+  </script>
+</body>
+</html>

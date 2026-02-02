@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>知识库 - 大熊的AI世界</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <style>
+    .knowledge-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .knowledge-section {
+      margin-bottom: 2rem;
+    }
+
+    .knowledge-header {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+    }
+
+    .knowledge-header:hover {
+      border-color: var(--primary);
+      transform: translateX(5px);
+    }
+
+    .knowledge-header.expanded {
+      border-color: var(--primary);
+      border-radius: 16px 16px 0 0;
+    }
+
+    .knowledge-icon {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, rgba(0,240,255,0.1), rgba(255,0,255,0.1));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .knowledge-title {
+      flex: 1;
+    }
+
+    .knowledge-title h3 {
+      margin: 0 0 0.25rem;
+      font-size: 1.1rem;
+    }
+
+    .knowledge-title p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .knowledge-toggle {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform var(--transition-fast);
+      color: var(--text-muted);
+    }
+
+    .knowledge-header.expanded .knowledge-toggle {
+      transform: rotate(180deg);
+      color: var(--primary);
+    }
+
+    .knowledge-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height var(--transition-normal);
+      background: var(--bg-glass);
+      border: 1px solid var(--border-color);
+      border-top: none;
+      border-radius: 0 0 16px 16px;
+    }
+
+    .knowledge-header.expanded + .knowledge-content {
+      max-height: 1000px;
+    }
+
+    .knowledge-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .knowledge-list li {
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .knowledge-list li:last-child {
+      border-bottom: none;
+    }
+
+    .knowledge-list a {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.5rem;
+      color: var(--text-secondary);
+      transition: all var(--transition-fast);
+    }
+
+    .knowledge-list a:hover {
+      background: rgba(0, 240, 255, 0.05);
+      color: var(--primary);
+      padding-left: 1.75rem;
+    }
+
+    .knowledge-list a::before {
+      content: '📄';
+      opacity: 0.7;
+    }
+
+    /* 搜索框 */
+    .search-box {
+      position: relative;
+      margin-bottom: 3rem;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 1rem 1.5rem 1rem 3rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 50px;
+      color: var(--text-primary);
+      font-size: 1rem;
+      transition: all var(--transition-normal);
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+    }
+
+    .search-box::before {
+      content: '🔍';
+      position: absolute;
+      left: 1.25rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+    }
+
+    /* 快捷链接 */
+    .quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .quick-link {
+      padding: 0.5rem 1rem;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-color);
+      border-radius: 50px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      transition: all var(--transition-fast);
+    }
+
+    .quick-link:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <!-- 背景特效 -->
+  <div class="background-effects">
+    <div class="grid-overlay"></div>
+    <canvas id="particles-canvas"></canvas>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+  </div>
+
+  <!-- 导航栏 -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">
+        <div class="logo-icon">🐻</div>
+        <span>大熊的AI世界</span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/" class="nav-link">首页</a></li>
+        <li><a href="/blog.html" class="nav-link">博客</a></li>
+        <li><a href="/projects.html" class="nav-link">项目</a></li>
+        <li><a href="/tools.html" class="nav-link">AI工具</a></li>
+        <li><a href="/knowledge.html" class="nav-link active">知识库</a></li>
+      </ul>
+      <div class="nav-actions" id="navActions"></div>
+      <button class="mobile-toggle" id="mobileToggle"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <!-- 页面头部 -->
+  <section class="hero" style="min-height: 40vh; padding-top: 8rem;">
+    <div class="hero-content">
+      <h1 class="hero-title" style="font-size: clamp(2rem, 5vw, 3rem);">
+        📚 <span class="gradient-text">AI知识库</span>
+      </h1>
+      <p class="hero-subtitle">
+        系统化的AI知识整理，随时查阅学习
+      </p>
+    </div>
+  </section>
+
+  <!-- 知识库内容 -->
+  <section class="section" style="padding-top: 0;">
+    <div class="knowledge-container">
+      <div class="search-box">
+        <input type="text" placeholder="搜索知识点..." id="searchInput">
+      </div>
+
+      <div class="quick-links">
+        <a href="#" class="quick-link">机器学习</a>
+        <a href="#" class="quick-link">深度学习</a>
+        <a href="#" class="quick-link">NLP</a>
+        <a href="#" class="quick-link">计算机视觉</a>
+        <a href="#" class="quick-link">强化学习</a>
+        <a href="#" class="quick-link">大语言模型</a>
+      </div>
+
+      <div class="knowledge-section animate-on-scroll">
+        <div class="knowledge-header" onclick="toggleSection(this)">
+          <div class="knowledge-icon">🧠</div>
+          <div class="knowledge-title">
+            <h3>机器学习基础</h3>
+            <p>机器学习的核心概念、算法和实践</p>
+          </div>
+          <div class="knowledge-toggle">▼</div>
+        </div>
+        <div class="knowledge-content">
+          <ul class="knowledge-list">
+            <li><a href="/blog.html?tag=机器学习">什么是机器学习？</a></li>
+            <li><a href="/blog.html?tag=监督学习">监督学习与无监督学习</a></li>
+            <li><a href="/blog.html?tag=分类">分类与回归问题</a></li>
+            <li><a href="/blog.html?tag=评估指标">模型评估指标详解</a></li>
+            <li><a href="/blog.html?tag=过拟合">过拟合与欠拟合</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="knowledge-section animate-on-scroll">
+        <div class="knowledge-header" onclick="toggleSection(this)">
+          <div class="knowledge-icon">🔮</div>
+          <div class="knowledge-title">
+            <h3>深度学习</h3>
+            <p>神经网络、CNN、RNN、Transformer等</p>
+          </div>
+          <div class="knowledge-toggle">▼</div>
+        </div>
+        <div class="knowledge-content">
+          <ul class="knowledge-list">
+            <li><a href="/blog.html?tag=神经网络">神经网络基础</a></li>
+            <li><a href="/blog.html?tag=CNN">卷积神经网络 (CNN)</a></li>
+            <li><a href="/blog.html?tag=RNN">循环神经网络 (RNN)</a></li>
+            <li><a href="/blog.html?tag=Transformer">Transformer架构</a></li>
+            <li><a href="/blog.html?tag=注意力机制">注意力机制详解</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="knowledge-section animate-on-scroll">
+        <div class="knowledge-header" onclick="toggleSection(this)">
+          <div class="knowledge-icon">💬</div>
+          <div class="knowledge-title">
+            <h3>自然语言处理</h3>
+            <p>文本处理、语义理解、文本生成</p>
+          </div>
+          <div class="knowledge-toggle">▼</div>
+        </div>
+        <div class="knowledge-content">
+          <ul class="knowledge-list">
+            <li><a href="/blog.html?tag=NLP">NLP入门指南</a></li>
+            <li><a href="/blog.html?tag=词向量">词向量与Embedding</a></li>
+            <li><a href="/blog.html?tag=文本分类">文本分类技术</a></li>
+            <li><a href="/blog.html?tag=命名实体识别">命名实体识别</a></li>
+            <li><a href="/blog.html?tag=机器翻译">机器翻译发展史</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="knowledge-section animate-on-scroll">
+        <div class="knowledge-header" onclick="toggleSection(this)">
+          <div class="knowledge-icon">👁️</div>
+          <div class="knowledge-title">
+            <h3>计算机视觉</h3>
+            <p>图像处理、目标检测、图像分割</p>
+          </div>
+          <div class="knowledge-toggle">▼</div>
+        </div>
+        <div class="knowledge-content">
+          <ul class="knowledge-list">
+            <li><a href="/blog.html?tag=CV">计算机视觉入门</a></li>
+            <li><a href="/blog.html?tag=目标检测">目标检测算法</a></li>
+            <li><a href="/blog.html?tag=图像分割">图像分割技术</a></li>
+            <li><a href="/blog.html?tag=人脸识别">人脸识别原理</a></li>
+            <li><a href="/blog.html?tag=图像生成">图像生成模型</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="knowledge-section animate-on-scroll">
+        <div class="knowledge-header" onclick="toggleSection(this)">
+          <div class="knowledge-icon">🎮</div>
+          <div class="knowledge-title">
+            <h3>大语言模型</h3>
+            <p>LLM原理、提示工程、应用实践</p>
+          </div>
+          <div class="knowledge-toggle">▼</div>
+        </div>
+        <div class="knowledge-content">
+          <ul class="knowledge-list">
+            <li><a href="/blog.html?tag=LLM">什么是大语言模型？</a></li>
+            <li><a href="/blog.html?tag=GPT">GPT系列模型解析</a></li>
+            <li><a href="/blog.html?tag=提示工程">提示工程最佳实践</a></li>
+            <li><a href="/blog.html?tag=微调">模型微调技术</a></li>
+            <li><a href="/blog.html?tag=RAG">RAG检索增强生成</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="knowledge-section animate-on-scroll">
+        <div class="knowledge-header" onclick="toggleSection(this)">
+          <div class="knowledge-icon">🛠️</div>
+          <div class="knowledge-title">
+            <h3>工具与框架</h3>
+            <p>主流AI框架、工具链、部署方案</p>
+          </div>
+          <div class="knowledge-toggle">▼</div>
+        </div>
+        <div class="knowledge-content">
+          <ul class="knowledge-list">
+            <li><a href="/blog.html?tag=PyTorch">PyTorch入门</a></li>
+            <li><a href="/blog.html?tag=TensorFlow">TensorFlow指南</a></li>
+            <li><a href="/blog.html?tag=HuggingFace">Hugging Face使用</a></li>
+            <li><a href="/blog.html?tag=LangChain">LangChain开发指南</a></li>
+            <li><a href="/blog.html?tag=模型部署">模型部署最佳实践</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="footer">
+    <div class="footer-bottom" style="max-width: 1200px; margin: 0 auto; padding-top: 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: 0.85rem;">
+      <p>&copy; 2024 大熊的AI世界. All rights reserved.</p>
+      <p>Made with ❤️ and AI</p>
+    </div>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/main.js"></script>
+  <script>
+    let currentUser = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initParticles();
+      initNavbar();
+      checkAuth();
+      initSearch();
+      initScrollAnimations();
+    });
+
+    function initParticles() {
+      const canvas = document.getElementById('particles-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      resize();
+      window.addEventListener('resize', resize);
+      class Particle {
+        constructor() { this.reset(); }
+        reset() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.vx = (Math.random() - 0.5) * 0.5;
+          this.vy = (Math.random() - 0.5) * 0.5;
+          this.size = Math.random() * 2 + 1;
+          this.opacity = Math.random() * 0.5 + 0.2;
+        }
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0, 240, 255, ${this.opacity})`;
+          ctx.fill();
+        }
+      }
+      for (let i = 0; i < 50; i++) particles.push(new Particle());
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    function initNavbar() {
+      const navbar = document.getElementById('navbar');
+      const mobileToggle = document.getElementById('mobileToggle');
+      const navLinks = document.getElementById('navLinks');
+      window.addEventListener('scroll', () => { navbar.classList.toggle('scrolled', window.scrollY > 50); });
+      mobileToggle?.addEventListener('click', () => {
+        mobileToggle.classList.toggle('active');
+        navLinks.classList.toggle('active');
+      });
+    }
+
+    async function checkAuth() {
+      const token = localStorage.getItem('bear_ai_token');
+      if (token) {
+        try {
+          currentUser = await getCurrentUser();
+          updateNavAuth();
+        } catch (e) { localStorage.removeItem('bear_ai_token'); }
+      }
+    }
+
+    function updateNavAuth() {
+      const navActions = document.getElementById('navActions');
+      if (!navActions) return;
+      if (currentUser) {
+        navActions.innerHTML = `<div class="user-menu"><button class="user-avatar-btn">${currentUser.username[0].toUpperCase()}</button><div class="user-dropdown"><a href="/profile.html">👤 个人中心</a><a href="#" onclick="handleLogout(); return false;">🚪 退出登录</a></div></div>`;
+      } else {
+        navActions.innerHTML = `<a href="/login.html" class="btn btn-ghost">登录</a><a href="/register.html" class="btn btn-primary">注册</a>`;
+      }
+    }
+
+    window.handleLogout = function() {
+      logout();
+      currentUser = null;
+      updateNavAuth();
+      showToast('已退出登录', 'success');
+    };
+
+    window.toggleSection = function(header) {
+      header.classList.toggle('expanded');
+    };
+
+    function initSearch() {
+      const searchInput = document.getElementById('searchInput');
+      const sections = document.querySelectorAll('.knowledge-section');
+
+      searchInput?.addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        sections.forEach(section => {
+          const text = section.textContent.toLowerCase();
+          section.style.display = text.includes(term) ? 'block' : 'none';
+        });
+      });
+    }
+
+    function initScrollAnimations() {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, { threshold: 0.1 });
+
+      document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="pageTitle">文章详情 - 大熊的AI世界</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <style>
+    .article-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .article-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .article-category {
+      display: inline-block;
+      padding: 0.4rem 1rem;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--primary);
+      border-radius: 50px;
+      font-size: 0.85rem;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+    }
+
+    .article-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      margin-bottom: 1.5rem;
+      line-height: 1.3;
+    }
+
+    .article-meta {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .article-meta span {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .article-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 3rem;
+      margin-bottom: 3rem;
+    }
+
+    .article-content h1,
+    .article-content h2,
+    .article-content h3 {
+      color: var(--text-primary);
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .article-content h1 { font-size: 1.8rem; }
+    .article-content h2 { font-size: 1.5rem; border-left: 3px solid var(--primary); padding-left: 1rem; }
+    .article-content h3 { font-size: 1.2rem; }
+
+    .article-content p {
+      margin-bottom: 1rem;
+      line-height: 1.8;
+      color: var(--text-secondary);
+    }
+
+    .article-content code {
+      background: rgba(0, 240, 255, 0.1);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+      color: var(--primary);
+    }
+
+    .article-content pre {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+
+    .article-content pre code {
+      background: none;
+      padding: 0;
+      color: var(--text-primary);
+    }
+
+    .article-content ul, .article-content ol {
+      margin: 1rem 0;
+      padding-left: 2rem;
+    }
+
+    .article-content li {
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+
+    .article-content blockquote {
+      border-left: 4px solid var(--primary);
+      padding-left: 1.5rem;
+      margin: 1.5rem 0;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    .article-content img {
+      max-width: 100%;
+      border-radius: 12px;
+      margin: 1.5rem 0;
+    }
+
+    .article-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .article-tag {
+      padding: 0.3rem 0.8rem;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-color);
+      border-radius: 50px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      transition: all var(--transition-fast);
+    }
+
+    .article-tag:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* 评论样式 */
+    .comments-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2rem;
+    }
+
+    .comments-title {
+      font-size: 1.3rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .comment-form textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 1rem;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      resize: vertical;
+      margin-bottom: 1rem;
+    }
+
+    .comment-form textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .comment-item {
+      padding: 1.25rem;
+      background: var(--bg-glass);
+      border-radius: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .comment-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .comment-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: var(--bg-dark);
+    }
+
+    .comment-author {
+      font-weight: 600;
+    }
+
+    .comment-date {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .comment-content {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .author-badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 4px;
+      font-size: 0.7rem;
+      color: var(--bg-dark);
+      margin-left: 0.5rem;
+    }
+
+    /* 导航按钮 */
+    .article-nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .article-nav a {
+      flex: 1;
+      padding: 1rem;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-secondary);
+      transition: all var(--transition-fast);
+    }
+
+    .article-nav a:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <!-- 背景特效 -->
+  <div class="background-effects">
+    <div class="grid-overlay"></div>
+    <canvas id="particles-canvas"></canvas>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+  </div>
+
+  <!-- 导航栏 -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">
+        <div class="logo-icon">🐻</div>
+        <span>大熊的AI世界</span>
+      </a>
+
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/" class="nav-link">首页</a></li>
+        <li><a href="/blog.html" class="nav-link active">博客</a></li>
+        <li><a href="/projects.html" class="nav-link">项目</a></li>
+        <li><a href="/tools.html" class="nav-link">AI工具</a></li>
+        <li><a href="/knowledge.html" class="nav-link">知识库</a></li>
+      </ul>
+
+      <div class="nav-actions" id="navActions"></div>
+
+      <button class="mobile-toggle" id="mobileToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 文章内容 -->
+  <section class="section" style="padding-top: 8rem;">
+    <div class="article-container">
+      <article id="articleContent">
+        <div class="loading-spinner" style="margin: 3rem auto;"></div>
+      </article>
+
+      <!-- 评论区域 -->
+      <div class="comments-section">
+        <h3 class="comments-title">💬 评论 <span id="commentCount">(0)</span></h3>
+
+        <div class="comment-form">
+          <textarea id="commentInput" placeholder="写下你的想法..."></textarea>
+          <button class="btn btn-primary" id="submitComment">发布评论</button>
+        </div>
+
+        <div id="commentsList" style="margin-top: 2rem;">
+          <!-- 动态加载 -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="footer">
+    <div class="footer-bottom" style="max-width: 1200px; margin: 0 auto; padding-top: 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: 0.85rem;">
+      <p>&copy; 2024 大熊的AI世界. All rights reserved.</p>
+      <p>Made with ❤️ and AI</p>
+    </div>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/main.js"></script>
+  <script>
+    let currentArticle = null;
+    let currentUser = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      initParticles();
+      initNavbar();
+      await checkAuth();
+      await loadArticle();
+
+      document.getElementById('submitComment').addEventListener('click', submitComment);
+    });
+
+    function initParticles() {
+      const canvas = document.getElementById('particles-canvas');
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      class Particle {
+        constructor() { this.reset(); }
+        reset() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.vx = (Math.random() - 0.5) * 0.5;
+          this.vy = (Math.random() - 0.5) * 0.5;
+          this.size = Math.random() * 2 + 1;
+          this.opacity = Math.random() * 0.5 + 0.2;
+        }
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0, 240, 255, ${this.opacity})`;
+          ctx.fill();
+        }
+      }
+
+      for (let i = 0; i < 50; i++) particles.push(new Particle());
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    function initNavbar() {
+      const navbar = document.getElementById('navbar');
+      const mobileToggle = document.getElementById('mobileToggle');
+      const navLinks = document.getElementById('navLinks');
+
+      window.addEventListener('scroll', () => {
+        navbar.classList.toggle('scrolled', window.scrollY > 50);
+      });
+
+      mobileToggle?.addEventListener('click', () => {
+        mobileToggle.classList.toggle('active');
+        navLinks.classList.toggle('active');
+      });
+    }
+
+    async function checkAuth() {
+      const token = localStorage.getItem('bear_ai_token');
+      if (token) {
+        try {
+          currentUser = await getCurrentUser();
+          updateNavAuth();
+        } catch (e) {
+          localStorage.removeItem('bear_ai_token');
+        }
+      }
+    }
+
+    function updateNavAuth() {
+      const navActions = document.getElementById('navActions');
+      if (!navActions) return;
+
+      if (currentUser) {
+        navActions.innerHTML = `
+          <div class="user-menu">
+            <button class="user-avatar-btn">${currentUser.username[0].toUpperCase()}</button>
+            <div class="user-dropdown">
+              <a href="/profile.html">👤 个人中心</a>
+              <a href="#" onclick="handleLogout(); return false;">🚪 退出登录</a>
+            </div>
+          </div>
+        `;
+      } else {
+        navActions.innerHTML = `
+          <a href="/login.html" class="btn btn-ghost">登录</a>
+          <a href="/register.html" class="btn btn-primary">注册</a>
+        `;
+      }
+    }
+
+    window.handleLogout = function() {
+      logout();
+      currentUser = null;
+      updateNavAuth();
+      showToast('已退出登录', 'success');
+    };
+
+    async function loadArticle() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const slug = urlParams.get('slug');
+
+      if (!slug) {
+        document.getElementById('articleContent').innerHTML = '<p style="text-align: center;">文章不存在</p>';
+        return;
+      }
+
+      try {
+        const data = await getArticle(slug);
+        currentArticle = data.data.article;
+
+        document.getElementById('pageTitle').textContent = `${currentArticle.title} - 大熊的AI世界`;
+        document.title = document.getElementById('pageTitle').textContent;
+
+        const date = new Date(currentArticle.created_at).toLocaleDateString('zh-CN', {
+          year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        // 渲染文章
+        document.getElementById('articleContent').innerHTML = `
+          <div class="article-header animate-fade-in-up">
+            <span class="article-category">${currentArticle.category}</span>
+            <h1 class="article-title">${currentArticle.title}</h1>
+            <div class="article-meta">
+              <span>👤 ${currentArticle.author}</span>
+              <span>📅 ${date}</span>
+              <span>👁 ${currentArticle.views} 阅读</span>
+            </div>
+          </div>
+          <div class="article-content animate-fade-in-up animate-delay-1">
+            ${renderMarkdown(currentArticle.content)}
+          </div>
+          <div class="article-tags">
+            ${currentArticle.tags ? currentArticle.tags.split(',').map(tag => `
+              <a href="/blog.html?tag=${tag.trim()}" class="article-tag">#${tag.trim()}</a>
+            `).join('') : ''}
+          </div>
+        `;
+
+        // 渲染评论
+        renderComments(data.data.comments);
+
+      } catch (e) {
+        document.getElementById('articleContent').innerHTML = '<p style="text-align: center;">文章不存在或加载失败</p>';
+      }
+    }
+
+    function renderMarkdown(content) {
+      // 简单Markdown渲染
+      return content
+        .replace(/^### (.*$)/gim, '<h3 id="$1">$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2 id="$1">$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1 id="$1">$1</h1>')
+        .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+        .replace(/\*(.*)\*/gim, '<em>$1</em>')
+        .replace(/```(\w+)?\n([\s\S]*?)```/gim, '<pre><code>$2</code></pre>')
+        .replace(/`([^`]+)`/gim, '<code>$1</code>')
+        .replace(/^- (.*$)/gim, '<ul><li>$1</li></ul>')
+        .replace(/^\d+\. (.*$)/gim, '<ol><li>$1</li></ol>')
+        .replace(/\n/gim, '<br>');
+    }
+
+    function renderComments(comments) {
+      document.getElementById('commentCount').textContent = `(${comments.length})`;
+
+      if (comments.length === 0) {
+        document.getElementById('commentsList').innerHTML = '<p style="text-align: center; color: var(--text-muted);">暂无评论，快来抢沙发~</p>';
+        return;
+      }
+
+      document.getElementById('commentsList').innerHTML = comments.map(comment => `
+        <div class="comment-item animate-fade-in-up">
+          <div class="comment-header">
+            <div class="comment-avatar">${comment.username[0].toUpperCase()}</div>
+            <div>
+              <span class="comment-author">${comment.username}</span>
+              ${comment.user_id === currentArticle.author_id ? '<span class="author-badge">作者</span>' : ''}
+              <div class="comment-date">${new Date(comment.created_at).toLocaleDateString('zh-CN')}</div>
+            </div>
+          </div>
+          <div class="comment-content">${escapeHtml(comment.content)}</div>
+        </div>
+      `).join('');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    async function submitComment() {
+      const input = document.getElementById('commentInput');
+      const content = input.value.trim();
+
+      if (!content) {
+        showToast('请输入评论内容', 'error');
+        return;
+      }
+
+      if (!currentUser) {
+        showToast('请先登录', 'error');
+        return;
+      }
+
+      try {
+        await createComment({ article_id: currentArticle.id, content });
+        showToast('评论成功', 'success');
+        input.value = '';
+        loadArticle(); // 重新加载评论
+      } catch (e) {
+        showToast('评论失败', 'error');
+      }
+    }
+  </script>
+</body>
+</html>

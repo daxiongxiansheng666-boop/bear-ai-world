@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大熊的AI世界 - 探索AI的无限可能</title>
+  <meta name="description" content="大熊的AI世界 - 个人博客、AI工具平台和知识库，分享AI教程、项目案例和最新动态">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/animations.css">
+</head>
+<body>
+  <!-- 背景特效 -->
+  <div class="background-effects">
+    <div class="grid-overlay"></div>
+    <canvas id="particles-canvas"></canvas>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    <div class="glow-orb glow-orb-3"></div>
+  </div>
+
+  <!-- 导航栏 -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">
+        <div class="logo-icon">🐻</div>
+        <span>大熊的AI世界</span>
+      </a>
+
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/" class="nav-link active">首页</a></li>
+        <li><a href="/blog.html" class="nav-link">博客</a></li>
+        <li><a href="/projects.html" class="nav-link">项目</a></li>
+        <li><a href="/tools.html" class="nav-link">AI工具</a></li>
+        <li><a href="/knowledge.html" class="nav-link">知识库</a></li>
+      </ul>
+
+      <div class="nav-actions" id="navActions">
+        <!-- 动态生成 -->
+      </div>
+
+      <button class="mobile-toggle" id="mobileToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span>🚀 AI新时代已到来</span>
+      </div>
+      <h1 class="hero-title">
+        探索 <span class="gradient-text">AI的无限可能</span>
+      </h1>
+      <p class="hero-subtitle">
+        这里是<span style="color: var(--primary);">大熊</span>的AI世界，
+        分享AI教程、项目案例和前沿工具。
+        让我们一起在AI的海洋中探索、成长。
+      </p>
+      <div class="hero-buttons">
+        <a href="/blog.html" class="btn btn-primary">
+          📚 开始阅读
+        </a>
+        <a href="/tools.html" class="btn btn-secondary">
+          🤖 体验AI工具
+        </a>
+      </div>
+      <div class="hero-stats" id="heroStats">
+        <!-- 动态加载 -->
+      </div>
+    </div>
+  </section>
+
+  <!-- 特性展示 -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">网站特性</h2>
+      <p class="section-subtitle">全方位的AI学习与实践平台</p>
+      <div class="section-divider"></div>
+    </div>
+    <div class="card-grid">
+      <div class="card feature-card animate-on-scroll">
+        <div class="feature-icon">📝</div>
+        <h3 class="feature-title">AI教程</h3>
+        <p class="feature-desc">从入门到精通的AI学习教程，涵盖机器学习、深度学习、大语言模型等</p>
+      </div>
+      <div class="card feature-card animate-on-scroll">
+        <div class="feature-icon">🛠️</div>
+        <h3 class="feature-title">AI工具平台</h3>
+        <p class="feature-desc">集成多种AI工具，支持智能对话、图像生成、代码辅助等功能</p>
+      </div>
+      <div class="card feature-card animate-on-scroll">
+        <div class="feature-icon">💡</div>
+        <h3 class="feature-title">项目案例</h3>
+        <p class="feature-desc">真实可运行的AI项目源码，从实践中学习AI开发</p>
+      </div>
+      <div class="card feature-card animate-on-scroll">
+        <div class="feature-icon">📚</div>
+        <h3 class="feature-title">知识库</h3>
+        <p class="feature-desc">系统化的AI知识整理，随时查阅学习</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 最新文章 -->
+  <section class="section" style="background: linear-gradient(180deg, transparent, rgba(255,0,255,0.02), transparent);">
+    <div class="section-header">
+      <h2 class="section-title">最新文章</h2>
+      <p class="section-subtitle">探索AI的前沿技术和最佳实践</p>
+      <div class="section-divider"></div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" data-category="all">全部</button>
+      <button class="tab-btn" data-category="AI教程">AI教程</button>
+      <button class="tab-btn" data-category="项目案例">项目案例</button>
+      <button class="tab-btn" data-category="个人动态">个人动态</button>
+      <button class="tab-btn" data-category="其他">其他</button>
+    </div>
+    <div class="card-grid" id="latestArticles">
+      <!-- 动态加载 -->
+    </div>
+    <div style="text-align: center; margin-top: 2rem;">
+      <a href="/blog.html" class="btn btn-secondary">查看更多 →</a>
+    </div>
+  </section>
+
+  <!-- 项目展示 -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">精选项目</h2>
+      <p class="section-subtitle">展示最酷的AI项目</p>
+      <div class="section-divider"></div>
+    </div>
+    <div class="card-grid" id="featuredProjects">
+      <!-- 动态加载 -->
+    </div>
+    <div style="text-align: center; margin-top: 2rem;">
+      <a href="/projects.html" class="btn btn-secondary">查看所有项目 →</a>
+    </div>
+  </section>
+
+  <!-- AI工具 -->
+  <section class="section ai-tools-section">
+    <div class="section-header">
+      <h2 class="section-title">AI对话助手</h2>
+      <p class="section-subtitle">基于大语言模型的智能对话工具</p>
+      <div class="section-divider"></div>
+    </div>
+    <div class="ai-tool-container">
+      <div class="chat-panel">
+        <div class="chat-header">
+          <div class="chat-avatar">🤖</div>
+          <div class="chat-info">
+            <h3>AI助手</h3>
+            <span>● 在线</span>
+          </div>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-message assistant">
+            <div class="message-bubble">
+              你好！我是大熊的AI助手。你可以问我任何关于AI、技术、学习的问题，我会尽力帮助你。有什么我可以帮忙的吗？😊
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <input type="text" id="chatInput" placeholder="输入消息..." autocomplete="off">
+          <button class="btn btn-primary" id="sendChat">发送</button>
+        </div>
+      </div>
+      <div class="ai-sidebar">
+        <div class="quick-prompts">
+          <h4>💡 快捷提示</h4>
+          <button class="quick-prompt-btn" data-prompt="帮我解释什么是Transformer架构？">解释Transformer架构</button>
+          <button class="quick-prompt-btn" data-prompt="如何开始学习AI？">如何开始学习AI</button>
+          <button class="quick-prompt-btn" data-prompt="推荐一些AI学习资源">AI学习资源推荐</button>
+          <button class="quick-prompt-btn" data-prompt="帮我写一个Python爬虫代码">写Python爬虫代码</button>
+        </div>
+        <div class="quick-prompts">
+          <h4>📊 使用统计</h4>
+          <div style="font-size: 0.85rem; color: var(--text-secondary);">
+            <p>对话次数：<span id="chatCount" style="color: var(--primary);">0</span></p>
+            <p>活跃用户：<span id="activeUsers" style="color: var(--success);">在线</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 关于博主 -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">关于大熊</h2>
+      <p class="section-subtitle">热爱AI与技术的探索者</p>
+      <div class="section-divider"></div>
+    </div>
+    <div style="max-width: 800px; margin: 0 auto;">
+      <div class="card" style="text-align: center; padding: 3rem;">
+        <div style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 3rem;">
+          🐻
+        </div>
+        <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">大熊</h3>
+        <p style="color: var(--primary); margin-bottom: 1rem;">AI技术爱好者 & 独立开发者</p>
+        <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto;">
+          致力于分享AI知识和工具，帮助更多人了解和使用AI。
+          相信AI会让世界变得更美好。
+        </p>
+        <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem;">
+          <a href="#" class="btn btn-secondary">GitHub</a>
+          <a href="#" class="btn btn-secondary">Twitter</a>
+          <a href="#" class="btn btn-secondary">关于我</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="logo-icon" style="width: 35px; height: 35px; font-size: 1.2rem;">🐻</div>
+          <span>大熊的AI世界</span>
+        </div>
+        <p>探索AI的无限可能，分享知识与经验。这里是AI学习者的乐园，欢迎一起交流成长。</p>
+        <div class="footer-social">
+          <a href="#" class="social-link" title="GitHub">📦</a>
+          <a href="#" class="social-link" title="Twitter">🐦</a>
+          <a href="#" class="social-link" title="Email">📧</a>
+          <a href="#" class="social-link" title="RSS">📡</a>
+        </div>
+      </div>
+      <div class="footer-column">
+        <h4 class="footer-title">快速导航</h4>
+        <ul class="footer-links">
+          <li><a href="/">首页</a></li>
+          <li><a href="/blog.html">博客文章</a></li>
+          <li><a href="/projects.html">项目展示</a></li>
+          <li><a href="/tools.html">AI工具</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h4 class="footer-title">内容分类</h4>
+        <ul class="footer-links">
+          <li><a href="/blog.html?category=AI教程">AI教程</a></li>
+          <li><a href="/blog.html?category=项目案例">项目案例</a></li>
+          <li><a href="/blog.html?category=个人动态">个人动态</a></li>
+          <li><a href="/knowledge.html">知识库</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h4 class="footer-title">技术支持</h4>
+        <ul class="footer-links">
+          <li><a href="#">使用指南</a></li>
+          <li><a href="#">API文档</a></li>
+          <li><a href="#">常见问题</a></li>
+          <li><a href="#">联系反馈</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2024 大熊的AI世界. All rights reserved.</p>
+      <p>Made with ❤️ and AI</p>
+    </div>
+  </footer>
+
+  <!-- Toast容器 -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>
