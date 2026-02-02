@@ -1048,17 +1048,33 @@
       });
 
       // API Config form
-      document.getElementById('apiConfigForm')?.addEventListener('submit', (e) => {
+      document.getElementById('apiConfigForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const apiKey = document.getElementById('deepseekApiKey').value;
         const model = document.getElementById('aiModel').value;
         
-        if (apiKey) {
-          localStorage.setItem('deepseek_api_key', apiKey);
+        // 保存到服务器数据库
+        try {
+          const response = await fetch('/api/config', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': localStorage.getItem('bear_ai_token') || ''
+            },
+            body: JSON.stringify({ deepseek_api_key: apiKey, ai_model: model })
+          });
+          const result = await response.json();
+          if (result.success) {
+            showToast('API配置已保存到数据库', 'success');
+          } else {
+            showToast(result.message || '保存失败', 'error');
+          }
+        } catch (error) {
+          // 备用：保存到本地
+          if (apiKey) localStorage.setItem('deepseek_api_key', apiKey);
+          localStorage.setItem('ai_model', model);
+          showToast('API配置已保存（浏览器缓存）', 'success');
         }
-        localStorage.setItem('ai_model', model);
-        
-        showToast('API配置已保存', 'success');
         updateApiStatus();
       });
 
@@ -1066,15 +1082,24 @@
       loadApiConfig();
     }
 
-    function loadApiConfig() {
-      const savedApiKey = localStorage.getItem('deepseek_api_key');
-      const savedModel = localStorage.getItem('ai_model');
-      
-      if (savedApiKey) {
-        document.getElementById('deepseekApiKey').value = savedApiKey;
-      }
-      if (savedModel) {
-        document.getElementById('aiModel').value = savedModel;
+    async function loadApiConfig() {
+      try {
+        const response = await fetch('/api/config');
+        const result = await response.json();
+        if (result.success && result.data) {
+          if (result.data.deepseek_api_key) {
+            document.getElementById('deepseekApiKey').value = result.data.deepseek_api_key;
+          }
+          if (result.data.ai_model) {
+            document.getElementById('aiModel').value = result.data.ai_model;
+          }
+        }
+      } catch (error) {
+        // 备用：从本地加载
+        const savedApiKey = localStorage.getItem('deepseek_api_key');
+        const savedModel = localStorage.getItem('ai_model');
+        if (savedApiKey) document.getElementById('deepseekApiKey').value = savedApiKey;
+        if (savedModel) document.getElementById('aiModel').value = savedModel;
       }
       updateApiStatus();
     }

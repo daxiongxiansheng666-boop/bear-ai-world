@@ -1,15 +1,22 @@
-// Vercel Serverless API Handler
+// Vercel Serverless API Handler with Postgres
 
-const API_CONFIG = {
-  providers: {
-    mock: { name: '模拟响应', enabled: true },
-    openai: { name: 'OpenAI (GPT)', enabled: false },
-    claude: { name: 'Claude', enabled: false },
-    clawdbot: { name: 'Clawdbot', enabled: false }
-  }
-};
+// 尝试加载 Vercel Postgres
+let sql;
+let useDatabase = false;
 
-let db = {
+try {
+  const { createClient } = require('@vercel/postgres');
+  sql = createClient({
+    connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL
+  });
+  useDatabase = true;
+} catch (e) {
+  console.log('Vercel Postgres 未配置，使用内存模式');
+  useDatabase = false;
+}
+
+// 内存模式数据库（备用）
+let memoryDb = {
   users: [{ id: 1, username: '大熊', email: '834202715@qq.com', password: 'sv834202715', bio: '全栈AI探索者' }],
   articles: [
     { id: 1, title: '2024年AI发展回顾与2025年趋势展望', slug: 'ai-2024-review-2025-outlook', excerpt: '回顾2024年AI领域的重大进展', category: 'AI教程', author: '大熊', views: 150, likes: 12, created_at: '2024-01-15' },
@@ -24,12 +31,10 @@ let db = {
     { id: 2, title: 'AI写作助手', slug: 'ai-writing-assistant', description: '基于GPT的智能写作', tech_stack: 'React, Node.js', featured: 1 },
     { id: 3, title: '智能图像识别', slug: 'smart-image-recognition', description: '物体识别系统', tech_stack: 'Python, PyTorch', featured: 1 }
   ],
-  comments: [],
   messages: [
     { id: 1, name: '访客小明', content: '网站做得真棒！', created_at: '2024-01-15' },
     { id: 2, name: 'AI爱好者', content: '大熊哥，AI教程写得非常好！', created_at: '2024-01-12' }
-  ],
-  favorites: []
+  ]
 };
 
 function generateToken(user) {
@@ -60,7 +65,7 @@ function getAIResponse(message) {
   return responses[Math.floor(Math.random() * responses.length)];
 }
 
-module.exports = (req, res) => {
+module.exports = async (req, res) => {
   const url = new URL(req.url, `https://${req.headers.host || 'localhost'}`);
   const pathname = url.pathname.replace('/api/', '');
   const method = req.method;
@@ -76,7 +81,7 @@ module.exports = (req, res) => {
 
   try {
     if (method !== 'GET' && method !== 'HEAD') {
-      try { data = req.body || {}; } catch (e) {}
+      try { data = await req.json(); } catch (e) {}
     }
 
     const authHeader = req.headers.authorization;
@@ -85,40 +90,76 @@ module.exports = (req, res) => {
 
     res.setHeader('Content-Type', 'application/json');
 
-    // Auth - Login
+    // ========== Auth ==========
     if (pathname === 'auth/login' && method === 'POST') {
-      const foundUser = db.users.find(u => u.email === data.email);
-      if (foundUser && data.password === foundUser.password) {
-        return res.json({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
+      if (useDatabase) {
+        const result = await sql`SELECT * FROM users WHERE email = ${data.email}`;
+        if (result.rows.length > 0 && result.rows[0].password === data.password) {
+          const foundUser = result.rows[0];
+          return res.json({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
+        }
+      } else {
+        const foundUser = memoryDb.users.find(u => u.email === data.email);
+        if (foundUser && data.password === foundUser.password) {
+          return res.json({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
+        }
       }
       return res.status(400).json({ success: false, message: '邮箱或密码错误' });
     }
 
-    // Auth - Register
     if (pathname === 'auth/register' && method === 'POST') {
-      if (db.users.find(u => u.email === data.email)) {
-        return res.status(400).json({ success: false, message: '邮箱已存在' });
+      if (useDatabase) {
+        await sql`INSERT INTO users (username, email, password) VALUES (${data.username}, ${data.email}, ${data.password})`;
+        const result = await sql`SELECT * FROM users WHERE email = ${data.email}`;
+        const newUser = result.rows[0];
+        return res.json({ success: true, data: { token: generateToken(newUser), user: { id: newUser.id, username: newUser.username, email: newUser.email } } });
       }
-      const newUser = { id: db.users.length + 1, username: data.username, email: data.email, password: data.password, bio: '' };
-      db.users.push(newUser);
-      return res.json({ success: true, data: { token: generateToken(newUser), user: { id: newUser.id, username: newUser.username, email: newUser.email } } });
+      return res.json({ success: true });
     }
 
-    // Auth - Me
     if (pathname === 'auth/me' && method === 'GET' && user) {
-      const foundUser = db.users.find(u => u.id === user.id);
-      return res.json({ success: true, data: foundUser ? { id: foundUser.id, username: foundUser.username, email: foundUser.email, bio: foundUser.bio } : null });
+      if (useDatabase) {
+        const result = await sql`SELECT * FROM users WHERE id = ${user.id}`;
+        if (result.rows.length > 0) {
+          const u = result.rows[0];
+          return res.json({ success: true, data: { id: u.id, username: u.username, email: u.email, bio: u.bio } });
+        }
+      }
+      return res.json({ success: true, data: user });
     }
 
-    // Articles - List
+    // ========== Config ==========
+    if (pathname === 'config' && method === 'GET') {
+      if (useDatabase) {
+        const result = await sql`SELECT * FROM config`;
+        const config = {};
+        result.rows.forEach(row => { config[row.key] = row.value; });
+        return res.json({ success: true, data: config });
+      }
+      return res.json({ success: true, data: {} });
+    }
+
+    if (pathname === 'config' && method === 'POST' && user) {
+      if (useDatabase) {
+        for (const [key, value] of Object.entries(data)) {
+          await sql`INSERT INTO config (key, value) VALUES (${key}, ${value}) ON CONFLICT (key) DO UPDATE SET value = ${value}, updated_at = CURRENT_TIMESTAMP`;
+        }
+        return res.json({ success: true, message: '配置已保存' });
+      }
+      return res.json({ success: true, message: '配置已保存（内存模式）' });
+    }
+
+    // ========== Articles ==========
     if (pathname === 'articles' && method === 'GET') {
-      return res.json({ success: true, data: { articles: db.articles, total: db.articles.length } });
+      if (useDatabase) {
+        const result = await sql`SELECT * FROM articles ORDER BY created_at DESC`;
+        return res.json({ success: true, data: { articles: result.rows, total: result.rows.length } });
+      }
+      return res.json({ success: true, data: { articles: memoryDb.articles, total: memoryDb.articles.length } });
     }
 
-    // Articles - Create
     if (pathname === 'articles' && method === 'POST' && user) {
       const newArticle = {
-        id: db.articles.length + 1,
         title: sanitize(data.title),
         slug: (data.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now(),
         content: sanitize(data.content),
@@ -130,45 +171,72 @@ module.exports = (req, res) => {
         likes: 0,
         created_at: new Date().toISOString().split('T')[0]
       };
-      db.articles.unshift(newArticle);
+      if (useDatabase) {
+        await sql`INSERT INTO articles (title, slug, excerpt, content, category, tags, author) VALUES (${newArticle.title}, ${newArticle.slug}, ${newArticle.excerpt}, ${newArticle.content}, ${newArticle.category}, ${newArticle.tags}, ${newArticle.author})`;
+      }
       return res.json({ success: true, data: newArticle });
     }
 
-    // Projects - List
+    // ========== Projects ==========
     if (pathname === 'projects' && method === 'GET') {
-      return res.json({ success: true, data: db.projects });
+      if (useDatabase) {
+        const result = await sql`SELECT * FROM projects ORDER BY created_at DESC`;
+        return res.json({ success: true, data: result.rows });
+      }
+      return res.json({ success: true, data: memoryDb.projects });
     }
 
-    // Stats
+    // ========== Stats ==========
     if (pathname === 'stats' && method === 'GET') {
-      return res.json({ success: true, data: {
-        articles: db.articles.length,
-        projects: db.projects.length,
-        comments: db.comments.length,
-        views: db.articles.reduce((sum, a) => sum + (a.views || 0), 0),
-        messages: db.messages.length
-      }});
+      if (useDatabase) {
+        const articles = await sql`SELECT COUNT(*) as count FROM articles`;
+        const projects = await sql`SELECT COUNT(*) as count FROM projects`;
+        const messages = await sql`SELECT COUNT(*) as count FROM messages`;
+        return res.json({ success: true, data: { articles: parseInt(articles.rows[0].count), projects: parseInt(projects.rows[0].count), messages: parseInt(messages.rows[0].count), views: 0 } });
+      }
+      return res.json({ success: true, data: { articles: memoryDb.articles.length, projects: memoryDb.projects.length, messages: memoryDb.messages.length } });
     }
 
-    // Messages - List
+    // ========== Messages ==========
     if (pathname === 'messages' && method === 'GET') {
-      return res.json({ success: true, data: db.messages.slice(0, 50) });
+      if (useDatabase) {
+        const result = await sql`SELECT * FROM messages ORDER BY created_at DESC LIMIT 50`;
+        return res.json({ success: true, data: result.rows });
+      }
+      return res.json({ success: true, data: memoryDb.messages });
     }
 
-    // Messages - Create
     if (pathname === 'messages' && method === 'POST') {
-      db.messages.unshift({ id: db.messages.length + 1, name: sanitize(data.name), content: sanitize(data.content), created_at: new Date().toISOString() });
+      if (useDatabase) {
+        await sql`INSERT INTO messages (name, email, content) VALUES (${sanitize(data.name)}, ${sanitize(data.email)}, ${sanitize(data.content)})`;
+      }
       return res.json({ success: true, message: '留言成功' });
     }
 
-    // AI Config
-    if (pathname === 'ai/config' && method === 'GET') {
-      return res.json({ success: true, data: { ...API_CONFIG.providers.mock, current: 'mock' } });
-    }
-
-    // AI Chat
+    // ========== AI Chat ==========
     if (pathname === 'ai/chat' && method === 'POST') {
       if (!data.message) return res.status(400).json({ success: false, message: '消息不能为空' });
+      
+      // 检查是否有配置 API Key
+      if (useDatabase) {
+        const result = await sql`SELECT value FROM config WHERE key = 'deepseek_api_key'`;
+        const apiKey = result.rows[0]?.value;
+        if (apiKey && apiKey.startsWith('sk-')) {
+          // 有 API Key，调用真实 AI
+          try {
+            const aiRes = await fetch('https://api.deepseek.com/chat/completions', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+              body: JSON.stringify({ model: 'deepseek-chat', messages: [{ role: 'user', content: data.message }] })
+            });
+            const aiData = await aiRes.json();
+            if (aiData.choices) {
+              return res.json({ success: true, data: { response: aiData.choices[0].message.content } });
+            }
+          } catch (e) {}
+        }
+      }
+      // 模拟响应
       return res.json({ success: true, data: { response: getAIResponse(data.message) } });
     }
 

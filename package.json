@@ -10,7 +10,9 @@
     "build": "echo 'No build required for static site'",
     "vercel-build": "echo 'Vercel build complete'"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@vercel/postgres": "^0.8.0"
+  },
   "engines": {
     "node": ">=18.0.0"
   }
