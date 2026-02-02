@@ -102,190 +102,175 @@ export default async function handler(req) {
     const user = userResult.valid ? userResult.user : null;
 
     // 路由处理
-    switch (pathname) {
-      // 认证
-      case 'auth/login':
-        if (method === 'POST') {
-          const foundUser = db.users.find(u => u.email === data.email);
-          if (foundUser && data.password === foundUser.password) {
-            return jsonResponse({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
-          }
-          return jsonResponse({ success: false, message: '邮箱或密码错误' }, 400);
-        }
-        break;
+    if (pathname === 'auth/login' && method === 'POST') {
+      const foundUser = db.users.find(u => u.email === data.email);
+      if (foundUser && data.password === foundUser.password) {
+        return jsonResponse({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
+      }
+      return jsonResponse({ success: false, message: '邮箱或密码错误' }, 400);
+    }
 
-      case 'auth/register':
-        if (method === 'POST') {
-          if (db.users.find(u => u.email === data.email)) {
-            return jsonResponse({ success: false, message: '邮箱已存在' }, 400);
-          }
-          const newUser = { id: db.users.length + 1, username: data.username, email: data.email, password: data.password, bio: '' };
-          db.users.push(newUser);
-          return jsonResponse({ success: true, data: { token: generateToken(newUser), user: { id: newUser.id, username: newUser.username, email: newUser.email } } });
-        }
-        break;
+    if (pathname === 'auth/register' && method === 'POST') {
+      if (db.users.find(u => u.email === data.email)) {
+        return jsonResponse({ success: false, message: '邮箱已存在' }, 400);
+      }
+      const newUser = { id: db.users.length + 1, username: data.username, email: data.email, password: data.password, bio: '' };
+      db.users.push(newUser);
+      return jsonResponse({ success: true, data: { token: generateToken(newUser), user: { id: newUser.id, username: newUser.username, email: newUser.email } } });
+    }
 
-      case 'auth/me':
-        if (method === 'GET' && user) {
-          const foundUser = db.users.find(u => u.id === user.id);
-          return jsonResponse({ success: true, data: foundUser ? { id: foundUser.id, username: foundUser.username, email: foundUser.email, bio: foundUser.bio } : null });
-        }
-        return jsonResponse({ success: false, message: '未登录' }, 401);
+    if (pathname === 'auth/me' && method === 'GET' && user) {
+      const foundUser = db.users.find(u => u.id === user.id);
+      return jsonResponse({ success: true, data: foundUser ? { id: foundUser.id, username: foundUser.username, email: foundUser.email, bio: foundUser.bio } : null });
+    }
 
-      case 'users/profile':
-        if (method === 'PUT' && user) {
-          const foundUser = db.users.find(u => u.id === user.id);
-          if (foundUser) foundUser.bio = data.bio || foundUser.bio;
-          return jsonResponse({ success: true, message: '更新成功' });
-        }
-        return jsonResponse({ success: false, message: '未登录' }, 401);
+    if (pathname === 'users/profile' && method === 'PUT' && user) {
+      const foundUser = db.users.find(u => u.id === user.id);
+      if (foundUser) foundUser.bio = data.bio || foundUser.bio;
+      return jsonResponse({ success: true, message: '更新成功' });
+    }
 
-      // 文章
-      case 'articles':
-        if (method === 'GET') {
-          const { category, search } = Object.fromEntries(url.searchParams);
-          let result = [...db.articles];
-          if (category && category !== 'all') result = result.filter(a => a.category === category);
-          if (search) {
-            const term = search.toLowerCase();
-            result = result.filter(a => a.title.toLowerCase().includes(term) || a.excerpt?.toLowerCase().includes(term));
-          }
-          return jsonResponse({ success: true, data: { articles: result, total: result.length } });
-        }
-        if (method === 'POST' && user) {
-          const newArticle = {
-            id: db.articles.length + 1,
-            title: sanitize(data.title),
-            slug: data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now(),
-            content: sanitize(data.content),
-            excerpt: sanitize(data.excerpt),
-            category: data.category,
-            tags: data.tags,
-            author: user.username,
-            views: 0,
-            likes: 0
-          };
-          db.articles.unshift(newArticle);
-          return jsonResponse({ success: true, data: newArticle });
-        }
-        return jsonResponse({ success: false, message: '未登录' }, 401);
+    if (pathname === 'users/password' && method === 'PUT' && user) {
+      const foundUser = db.users.find(u => u.id === user.id);
+      if (foundUser && foundUser.password === data.currentPassword) {
+        foundUser.password = data.newPassword;
+        return jsonResponse({ success: true, message: '密码已修改' });
+      }
+      return jsonResponse({ success: false, message: '当前密码错误' }, 400);
+    }
 
-      case 'articles/' + parts[1] when parts.length === 2:
-        if (method === 'GET') {
-          const article = db.articles.find(a => a.slug === parts[1]);
-          if (article) {
-            article.views++;
-            return jsonResponse({ success: true, data: { article, comments: db.comments.filter(c => c.article_id === article.id) } });
-          }
-          return jsonResponse({ success: false, message: '文章不存在' }, 404);
-        }
-        if (method === 'DELETE' && user) {
-          const idx = db.articles.findIndex(a => a.id === parseInt(parts[1]));
-          if (idx > -1) db.articles.splice(idx, 1);
-          return jsonResponse({ success: true, message: '删除成功' });
-        }
-        break;
+    // 文章
+    if (pathname === 'articles' && method === 'GET') {
+      const { category, search } = Object.fromEntries(url.searchParams);
+      let result = [...db.articles];
+      if (category && category !== 'all') result = result.filter(a => a.category === category);
+      if (search) {
+        const term = search.toLowerCase();
+        result = result.filter(a => a.title.toLowerCase().includes(term) || a.excerpt?.toLowerCase().includes(term));
+      }
+      return jsonResponse({ success: true, data: { articles: result, total: result.length } });
+    }
 
-      case 'articles/' + parts[1] + '/like' when parts.length === 3:
-        if (method === 'POST' && user) {
-          const article = db.articles.find(a => a.id === parseInt(parts[1]));
-          if (article) article.likes++;
-          return jsonResponse({ success: true, data: { likes: article?.likes || 0 } });
-        }
-        return jsonResponse({ success: false, message: '未登录' }, 401);
+    if (pathname === 'articles' && method === 'POST' && user) {
+      const newArticle = {
+        id: db.articles.length + 1,
+        title: sanitize(data.title),
+        slug: data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now(),
+        content: sanitize(data.content),
+        excerpt: sanitize(data.excerpt),
+        category: data.category,
+        tags: data.tags,
+        author: user.username,
+        views: 0,
+        likes: 0,
+        created_at: new Date().toISOString().split('T')[0]
+      };
+      db.articles.unshift(newArticle);
+      return jsonResponse({ success: true, data: newArticle });
+    }
 
-      // 项目
-      case 'projects':
-        if (method === 'GET') {
-          const { featured } = Object.fromEntries(url.searchParams);
-          let result = [...db.projects];
-          if (featured === '1') result = result.filter(p => p.featured === 1);
-          return jsonResponse({ success: true, data: result });
-        }
-        if (method === 'POST' && user) {
-          const newProject = {
-            id: db.projects.length + 1,
-            title: sanitize(data.title),
-            slug: data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now(),
-            description: sanitize(data.description),
-            content: sanitize(data.content),
-            tech_stack: data.tech_stack,
-            featured: data.featured ? 1 : 0
-          };
-          db.projects.unshift(newProject);
-          return jsonResponse({ success: true, data: newProject });
-        }
-        return jsonResponse({ success: false, message: '未登录' }, 401);
+    // 单篇文章操作
+    if (parts[0] === 'articles' && parts.length === 2 && method === 'GET') {
+      const article = db.articles.find(a => a.slug === parts[1]);
+      if (article) {
+        article.views++;
+        return jsonResponse({ success: true, data: { article, comments: db.comments.filter(c => c.article_id === article.id) } });
+      }
+      return jsonResponse({ success: false, message: '文章不存在' }, 404);
+    }
 
-      // 收藏
-      case 'favorites':
-        if (method === 'GET' && user) {
-          return jsonResponse({ success: true, data: db.favorites.filter(f => f.user_id === user.id) });
-        }
-        if (method === 'POST' && user) {
-          db.favorites.push({ id: db.favorites.length + 1, user_id: user.id, article_id: data.article_id, project_id: data.project_id });
-          return jsonResponse({ success: true, message: '收藏成功' });
-        }
-        return jsonResponse({ success: false, message: '未登录' }, 401);
+    if (parts[0] === 'articles' && parts.length === 3 && parts[2] === 'like' && method === 'POST') {
+      const article = db.articles.find(a => a.id === parseInt(parts[1]));
+      if (article) article.likes++;
+      return jsonResponse({ success: true, data: { likes: article?.likes || 0 } });
+      return jsonResponse({ success: false, message: '未登录' }, 401);
+    }
 
-      // 评论
-      case 'comments':
-        if (method === 'POST' && user) {
-          db.comments.push({ id: db.comments.length + 1, article_id: data.article_id, user_id: user.id, content: sanitize(data.content), created_at: new Date().toISOString() });
-          return jsonResponse({ success: true, message: '评论成功' });
-        }
-        return jsonResponse({ success: false, message: '未登录' }, 401);
+    // 项目
+    if (pathname === 'projects' && method === 'GET') {
+      const { featured } = Object.fromEntries(url.searchParams);
+      let result = [...db.projects];
+      if (featured === '1') result = result.filter(p => p.featured === 1);
+      return jsonResponse({ success: true, data: result });
+    }
 
-      // 留言
-      case 'messages':
-        if (method === 'GET') {
-          return jsonResponse({ success: true, data: db.messages.slice(0, 50) });
-        }
-        if (method === 'POST') {
-          db.messages.unshift({ id: db.messages.length + 1, name: sanitize(data.name), email: data.email, content: sanitize(data.content), created_at: new Date().toISOString() });
-          return jsonResponse({ success: true, message: '留言成功' });
-        }
-        break;
+    if (pathname === 'projects' && method === 'POST' && user) {
+      const newProject = {
+        id: db.projects.length + 1,
+        title: sanitize(data.title),
+        slug: data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now(),
+        description: sanitize(data.description),
+        content: sanitize(data.content),
+        tech_stack: data.tech_stack,
+        featured: data.featured ? 1 : 0,
+        created_at: new Date().toISOString().split('T')[0]
+      };
+      db.projects.unshift(newProject);
+      return jsonResponse({ success: true, data: newProject });
+    }
 
-      // 搜索
-      case 'search':
-        if (method === 'GET') {
-          const { q, type } = Object.fromEntries(url.searchParams);
-          if (!q || q.length < 2) return jsonResponse({ success: false, message: '关键词至少2个字符' }, 400);
-          const term = q.toLowerCase();
-          const results = { articles: [], projects: [] };
-          if (!type || type === 'all' || type === 'articles') {
-            results.articles = db.articles.filter(a => a.title.toLowerCase().includes(term) || a.excerpt?.toLowerCase().includes(term)).slice(0, 10);
-          }
-          if (!type || type === 'all' || type === 'projects') {
-            results.projects = db.projects.filter(p => p.title.toLowerCase().includes(term) || p.description?.toLowerCase().includes(term)).slice(0, 10);
-          }
-          return jsonResponse({ success: true, data: results });
-        }
-        break;
+    // 收藏
+    if (pathname === 'favorites' && method === 'GET' && user) {
+      return jsonResponse({ success: true, data: db.favorites.filter(f => f.user_id === user.id) });
+    }
 
-      // 统计
-      case 'stats':
-        return jsonResponse({ success: true, data: {
-          articles: db.articles.length,
-          projects: db.projects.length,
-          comments: db.comments.length,
-          users: db.users.length,
-          views: db.articles.reduce((sum, a) => sum + (a.views || 0), 0),
-          likes: db.articles.reduce((sum, a) => sum + (a.likes || 0), 0),
-          messages: db.messages.length
-        }});
+    if (pathname === 'favorites' && method === 'POST' && user) {
+      db.favorites.push({ id: db.favorites.length + 1, user_id: user.id, article_id: data.article_id, project_id: data.project_id });
+      return jsonResponse({ success: true, message: '收藏成功' });
+    }
 
-      // AI
-      case 'ai/config':
-        return jsonResponse({ success: true, data: { ...API_CONFIG.providers.mock, current: 'mock' } });
+    // 评论
+    if (pathname === 'comments' && method === 'POST' && user) {
+      db.comments.push({ id: db.comments.length + 1, article_id: data.article_id, user_id: user.id, content: sanitize(data.content), created_at: new Date().toISOString() });
+      return jsonResponse({ success: true, message: '评论成功' });
+    }
 
-      case 'ai/chat':
-        if (method === 'POST' && user) {
-          if (!data.message) return jsonResponse({ success: false, message: '消息不能为空' }, 400);
-          return jsonResponse({ success: true, data: { response: getAIResponse(data.message) } });
-        }
-        return jsonResponse({ success: false, message: '未登录' }, 401);
+    // 留言
+    if (pathname === 'messages' && method === 'GET') {
+      return jsonResponse({ success: true, data: db.messages.slice(0, 50) });
+    }
+
+    if (pathname === 'messages' && method === 'POST') {
+      db.messages.unshift({ id: db.messages.length + 1, name: sanitize(data.name), email: data.email, content: sanitize(data.content), created_at: new Date().toISOString() });
+      return jsonResponse({ success: true, message: '留言成功' });
+    }
+
+    // 搜索
+    if (pathname === 'search' && method === 'GET') {
+      const { q, type } = Object.fromEntries(url.searchParams);
+      if (!q || q.length < 2) return jsonResponse({ success: false, message: '关键词至少2个字符' }, 400);
+      const term = q.toLowerCase();
+      const results = { articles: [], projects: [] };
+      if (!type || type === 'all' || type === 'articles') {
+        results.articles = db.articles.filter(a => a.title.toLowerCase().includes(term) || a.excerpt?.toLowerCase().includes(term)).slice(0, 10);
+      }
+      if (!type || type === 'all' || type === 'projects') {
+        results.projects = db.projects.filter(p => p.title.toLowerCase().includes(term) || p.description?.toLowerCase().includes(term)).slice(0, 10);
+      }
+      return jsonResponse({ success: true, data: results });
+    }
+
+    // 统计
+    if (pathname === 'stats' && method === 'GET') {
+      return jsonResponse({ success: true, data: {
+        articles: db.articles.length,
+        projects: db.projects.length,
+        comments: db.comments.length,
+        users: db.users.length,
+        views: db.articles.reduce((sum, a) => sum + (a.views || 0), 0),
+        likes: db.articles.reduce((sum, a) => sum + (a.likes || 0), 0),
+        messages: db.messages.length
+      }});
+    }
+
+    // AI
+    if (pathname === 'ai/config' && method === 'GET') {
+      return jsonResponse({ success: true, data: { ...API_CONFIG.providers.mock, current: 'mock' } });
+    }
+
+    if (pathname === 'ai/chat' && method === 'POST' && user) {
+      if (!data.message) return jsonResponse({ success: false, message: '消息不能为空' }, 400);
+      return jsonResponse({ success: true, data: { response: getAIResponse(data.message) } });
     }
 
     return jsonResponse({ success: false, message: 'API不存在' }, 404);

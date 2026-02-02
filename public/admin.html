@@ -908,15 +908,25 @@
       });
 
       // Password form
-      document.getElementById('passwordForm')?.addEventListener('submit', (e) => {
+      document.getElementById('passwordForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const currentPass = document.getElementById('currentPassword').value;
         const newPass = document.getElementById('newPassword').value;
         const confirmPass = document.getElementById('confirmPassword').value;
+        
         if (newPass !== confirmPass) {
           showToast('两次密码不一致', 'error');
           return;
         }
-        showToast('密码已修改', 'success');
+        
+        if (newPass.length < 6) {
+          showToast('新密码至少6位', 'error');
+          return;
+        }
+        
+        // 模拟保存密码（因为是静态页面，保存到localStorage）
+        localStorage.setItem('bear_admin_password', newPass);
+        showToast('密码已修改成功', 'success');
         e.target.reset();
       });
 
