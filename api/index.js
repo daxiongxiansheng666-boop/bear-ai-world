@@ -102,8 +102,14 @@ module.exports = async (req, res) => {
   }
 
   try {
+    let data = {};
+    
+    // 只读取一次请求体
     if (method !== 'GET' && method !== 'HEAD') {
-      try { data = await req.json(); } catch (e) {}
+      try {
+        const raw = await req.text();
+        if (raw) data = JSON.parse(raw);
+      } catch (e) {}
     }
 
     const authHeader = req.headers.authorization;
@@ -114,24 +120,12 @@ module.exports = async (req, res) => {
 
     // ========== Auth ==========
     if (pathname === 'auth/login' && method === 'POST') {
-      // 手动解析请求体
-      let bodyData = {};
-      try {
-        const raw = await req.text();
-        if (raw) {
-          bodyData = JSON.parse(raw);
-        }
-      } catch (e) {
-        console.log('Parse error:', e.message);
-      }
-      
-      const email = bodyData.email || data?.email;
-      const password = bodyData.password || data?.password;
+      const email = data?.email;
+      const password = data?.password;
       
       console.log('Email:', email, 'Password:', password ? '***' : 'EMPTY');
       
       if (!email || !password) {
-        console.log('Missing credentials');
         return res.status(400).json({ success: false, message: '邮箱或密码错误' });
       }
       
@@ -149,9 +143,6 @@ module.exports = async (req, res) => {
           
           if (result.rows.length > 0) {
             const user = result.rows[0];
-            console.log('User:', user.email);
-            console.log('Password check:', user.password === password);
-            
             if (user.password === password) {
               return res.json({ success: true, data: { token: generateToken(user), user: { id: user.id, username: user.username, email: user.email } } });
             }
