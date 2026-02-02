@@ -246,6 +246,17 @@ module.exports = async (req, res) => {
       return res.json({ success: true, data: { response: getAIResponse(data.message) } });
     }
 
+    // ========== Debug ==========
+    if (pathname === 'debug' && method === 'GET') {
+      const url = process.env.POSTGRES_URL || process.env.DATABASE_URL || process.env.PRISMA_DATABASE_URL;
+      return res.json({ 
+        success: true, 
+        hasUrl: !!url,
+        urlPreview: url ? url.substring(0, 60) + '...' : 'none',
+        nodeEnv: process.env.NODE_ENV
+      });
+    }
+
     return res.status(404).json({ success: false, message: 'API不存在' });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message || '服务器错误' });
