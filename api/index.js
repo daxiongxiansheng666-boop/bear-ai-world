@@ -104,20 +104,13 @@ module.exports = async (req, res) => {
   try {
     let data = {};
     
-    // 尝试多种方式读取请求体
+    // Vercel Serverless 需要克隆请求来多次读取
     if (method !== 'GET' && method !== 'HEAD') {
       try {
-        // 方法1: text()
-        let raw = await req.text();
+        const reqClone = req.clone();
+        const raw = await reqClone.text();
         if (raw) {
           data = JSON.parse(raw);
-        } else {
-          // 方法2: arrayBuffer()
-          const buffer = await req.arrayBuffer();
-          if (buffer && buffer.byteLength > 0) {
-            raw = new TextDecoder().decode(buffer);
-            data = JSON.parse(raw);
-          }
         }
       } catch (e) {
         console.log('Body parse error:', e.message);
