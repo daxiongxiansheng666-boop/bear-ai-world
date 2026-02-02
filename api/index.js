@@ -1,30 +1,28 @@
-// Vercel Serverless API Handler with Prisma
+// Vercel Serverless API Handler with PostgreSQL (Native pg)
 
-let prisma;
+// 使用 Node.js 原生 pg 模块
+const { Client } = require('pg');
+
+let pgClient;
 let useDatabase = false;
 
 try {
-  // 优先使用 Prisma
-  if (process.env.PRISMA_DATABASE_URL) {
-    const { PrismaClient } = require('@prisma/client');
-    prisma = new PrismaClient();
+  // 老板给的 Prisma URL 格式转标准 postgres
+  const dbUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL || process.env.PRISMA_DATABASE_URL;
+  
+  if (dbUrl) {
+    // 转换 prisma+postgres:// -> postgres://
+    let connectionString = dbUrl.replace('prisma+postgres://', 'postgres://');
+    
+    pgClient = new Client({ connectionString });
     useDatabase = true;
-    console.log('Prisma 数据库已配置');
-  }
-  // 备用 Vercel Postgres
-  else if (process.env.POSTGRES_URL) {
-    const { createClient } = require('@vercel/postgres');
-    prisma = createClient({
-      connectionString: process.env.POSTGRES_URL
-    });
-    useDatabase = true;
-    console.log('Vercel Postgres 已配置');
+    console.log('PostgreSQL 已配置');
   } else {
     console.log('未配置数据库，使用内存模式');
     useDatabase = false;
   }
 } catch (e) {
-  console.log('数据库初始化失败，使用内存模式', e.message);
+  console.log('PostgreSQL 初始化失败，使用内存模式', e.message);
   useDatabase = false;
 }
 
@@ -78,6 +76,17 @@ function getAIResponse(message) {
   return responses[Math.floor(Math.random() * responses.length)];
 }
 
+async function queryDb(text, params) {
+  if (!useDatabase || !pgClient) throw new Error('数据库未配置');
+  try {
+    await pgClient.connect();
+    const result = await pgClient.query(text, params);
+    return result;
+  } catch (e) {
+    throw e;
+  }
+}
+
 module.exports = async (req, res) => {
   const url = new URL(req.url, `https://${req.headers.host || 'localhost'}`);
   const pathname = url.pathname.replace('/api/', '');
@@ -105,17 +114,16 @@ module.exports = async (req, res) => {
 
     // ========== Auth ==========
     if (pathname === 'auth/login' && method === 'POST') {
-      // Prisma 模式
-      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+      // 数据库模式
+      if (useDatabase) {
         try {
-          const foundUser = await prisma.users.findFirst({
-            where: { email: data.email, password: data.password }
-          });
-          if (foundUser) {
+          const result = await queryDb('SELECT * FROM users WHERE email = $1 AND password = $2', [data.email, data.password]);
+          if (result.rows.length > 0) {
+            const foundUser = result.rows[0];
             return res.json({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
           }
         } catch (e) {
-          console.log('Prisma 查询失败:', e.message);
+          console.log('数据库查询失败:', e.message);
         }
       }
       // 内存模式
@@ -128,11 +136,11 @@ module.exports = async (req, res) => {
 
     // ========== Config ==========
     if (pathname === 'config' && method === 'GET') {
-      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+      if (useDatabase) {
         try {
-          const configs = await prisma.config.findMany();
+          const result = await queryDb('SELECT * FROM config');
           const configObj = {};
-          configs.forEach(c => { configObj[c.key] = c.value; });
+          result.rows.forEach(row => { configObj[row.key] = row.value; });
           return res.json({ success: true, data: configObj });
         } catch (e) {}
       }
@@ -140,18 +148,14 @@ module.exports = async (req, res) => {
     }
 
     if (pathname === 'config' && method === 'POST' && user) {
-      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+      if (useDatabase) {
         try {
           for (const [key, value] of Object.entries(data)) {
-            await prisma.config.upsert({
-              where: { key },
-              update: { value, updated_at: new Date() },
-              create: { key, value }
-            });
+            await queryDb('INSERT INTO config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = CURRENT_TIMESTAMP', [key, value]);
           }
           return res.json({ success: true, message: '配置已保存' });
         } catch (e) {
-          console.log('Prisma 保存失败:', e.message);
+          console.log('配置保存失败:', e.message);
         }
       }
       return res.json({ success: true, message: '配置已保存（内存模式）' });
@@ -159,10 +163,10 @@ module.exports = async (req, res) => {
 
     // ========== Articles ==========
     if (pathname === 'articles' && method === 'GET') {
-      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+      if (useDatabase) {
         try {
-          const articles = await prisma.articles.findMany({ orderBy: { created_at: 'desc' } });
-          return res.json({ success: true, data: { articles, total: articles.length } });
+          const result = await queryDb('SELECT * FROM articles ORDER BY created_at DESC');
+          return res.json({ success: true, data: { articles: result.rows, total: result.rows.length } });
         } catch (e) {}
       }
       return res.json({ success: true, data: { articles: memoryDb.articles, total: memoryDb.articles.length } });
@@ -170,10 +174,10 @@ module.exports = async (req, res) => {
 
     // ========== Projects ==========
     if (pathname === 'projects' && method === 'GET') {
-      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+      if (useDatabase) {
         try {
-          const projects = await prisma.projects.findMany({ orderBy: { created_at: 'desc' } });
-          return res.json({ success: true, data: projects });
+          const result = await queryDb('SELECT * FROM projects ORDER BY created_at DESC');
+          return res.json({ success: true, data: result.rows });
         } catch (e) {}
       }
       return res.json({ success: true, data: memoryDb.projects });
@@ -181,12 +185,12 @@ module.exports = async (req, res) => {
 
     // ========== Stats ==========
     if (pathname === 'stats' && method === 'GET') {
-      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+      if (useDatabase) {
         try {
-          const articles = await prisma.articles.count();
-          const projects = await prisma.projects.count();
-          const messages = await prisma.messages.count();
-          return res.json({ success: true, data: { articles, projects, messages, views: 0 } });
+          const articles = await queryDb('SELECT COUNT(*) as count FROM articles');
+          const projects = await queryDb('SELECT COUNT(*) as count FROM projects');
+          const messages = await queryDb('SELECT COUNT(*) as count FROM messages');
+          return res.json({ success: true, data: { articles: parseInt(articles.rows[0].count), projects: parseInt(projects.rows[0].count), messages: parseInt(messages.rows[0].count) } });
         } catch (e) {}
       }
       return res.json({ success: true, data: { articles: memoryDb.articles.length, projects: memoryDb.projects.length, messages: memoryDb.messages.length } });
@@ -194,21 +198,19 @@ module.exports = async (req, res) => {
 
     // ========== Messages ==========
     if (pathname === 'messages' && method === 'GET') {
-      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+      if (useDatabase) {
         try {
-          const messages = await prisma.messages.findMany({ take: 50, orderBy: { created_at: 'desc' } });
-          return res.json({ success: true, data: messages });
+          const result = await queryDb('SELECT * FROM messages ORDER BY created_at DESC LIMIT 50');
+          return res.json({ success: true, data: result.rows });
         } catch (e) {}
       }
       return res.json({ success: true, data: memoryDb.messages });
     }
 
     if (pathname === 'messages' && method === 'POST') {
-      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+      if (useDatabase) {
         try {
-          await prisma.messages.create({
-            data: { name: sanitize(data.name), email: sanitize(data.email), content: sanitize(data.content) }
-          });
+          await queryDb('INSERT INTO messages (name, email, content) VALUES ($1, $2, $3)', [sanitize(data.name), sanitize(data.email), sanitize(data.content)]);
         } catch (e) {}
       }
       return res.json({ success: true, message: '留言成功' });
@@ -218,10 +220,10 @@ module.exports = async (req, res) => {
     if (pathname === 'ai/chat' && method === 'POST') {
       if (!data.message) return res.status(400).json({ success: false, message: '消息不能为空' });
       
-      if (useDatabase && process.env.PRISMA_DATABASE_URL) {
+      if (useDatabase) {
         try {
-          const config = await prisma.config.findFirst({ where: { key: 'deepseek_api_key' } });
-          const apiKey = config?.value;
+          const result = await queryDb('SELECT value FROM config WHERE key = $1', ['deepseek_api_key']);
+          const apiKey = result.rows[0]?.value;
           if (apiKey && apiKey.startsWith('sk-')) {
             try {
               const aiRes = await fetch('https://api.deepseek.com/chat/completions', {
