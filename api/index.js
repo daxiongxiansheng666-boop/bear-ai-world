@@ -114,21 +114,27 @@ module.exports = async (req, res) => {
 
     // ========== Auth ==========
     if (pathname === 'auth/login' && method === 'POST') {
+      console.log('Login request received');
+      console.log('Data:', JSON.stringify(data));
+      console.log('DB configured:', isDbConfigured());
+      
       // 数据库模式
       if (isDbConfigured()) {
         try {
           const result = await queryDb('SELECT * FROM users WHERE email = $1 AND password = $2', [data.email, data.password]);
+          console.log('DB result rows:', result.rows.length);
           if (result.rows.length > 0) {
             const foundUser = result.rows[0];
             return res.json({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
           }
         } catch (e) {
-          // 静默失败，回退到内存模式
+          console.log('DB error:', e.message);
         }
       }
       
       // 内存模式
       const foundUser = memoryDb.users.find(u => u.email === data.email && u.password === data.password);
+      console.log('Memory mode user:', foundUser);
       if (foundUser) {
         return res.json({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
       }
