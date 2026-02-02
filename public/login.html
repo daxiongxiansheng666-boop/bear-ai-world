@@ -260,12 +260,23 @@
         const password = document.getElementById('password').value;
 
         try {
-          const data = await login(email, password);
+          // 直接调用 API，不依赖模块
+          const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          const data = await response.json();
+
           if (data.success) {
+            // 保存 token
+            localStorage.setItem('bear_ai_token', data.data.token);
             showToast('登录成功！', 'success');
             setTimeout(() => {
-              window.location.href = '/';
+              window.location.href = '/admin.html';
             }, 1000);
+          } else {
+            showToast(data.message || '登录失败', 'error');
           }
         } catch (error) {
           showToast(error.message || '登录失败', 'error');
