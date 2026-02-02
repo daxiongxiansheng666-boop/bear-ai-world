@@ -114,10 +114,15 @@ module.exports = async (req, res) => {
 
     // ========== Auth ==========
     if (pathname === 'auth/login' && method === 'POST') {
+      console.log('=== LOGIN REQUEST ===');
+      console.log('Raw body:', typeof req.body, req.body);
+      console.log('Parsed data:', data);
+      console.log('Email:', data?.email);
+      console.log('Password:', data?.password);
+      
       // 数据库模式
       if (isDbConfigured()) {
         try {
-          // 直接查询，不用参数，防止 prepared statement 问题
           const url = getConnectionString();
           const { Client } = require('pg');
           const client = new Client({ connectionString: url });
@@ -125,14 +130,15 @@ module.exports = async (req, res) => {
           const result = await client.query('SELECT * FROM users WHERE email = $1', [data.email]);
           await client.end();
           
-          console.log('Direct DB query result:', result.rows.length);
+          console.log('DB rows found:', result.rows.length);
           
           if (result.rows.length > 0) {
             const user = result.rows[0];
+            console.log('User from DB:', user.email, user.password);
+            console.log('Comparing password:', data.password, '===', user.password, '?', data.password === user.password);
+            
             if (user.password === data.password) {
               return res.json({ success: true, data: { token: generateToken(user), user: { id: user.id, username: user.username, email: user.email } } });
-            } else {
-              console.log('Password mismatch:', user.password, 'vs', data.password);
             }
           }
         } catch (e) {
@@ -140,11 +146,6 @@ module.exports = async (req, res) => {
         }
       }
       
-      // 内存模式
-      const foundUser = memoryDb.users.find(u => u.email === data.email && u.password === data.password);
-      if (foundUser) {
-        return res.json({ success: true, data: { token: generateToken(foundUser), user: { id: foundUser.id, username: foundUser.username, email: foundUser.email } } });
-      }
       return res.status(400).json({ success: false, message: '邮箱或密码错误' });
     }
 
