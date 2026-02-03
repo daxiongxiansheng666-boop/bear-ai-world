@@ -245,11 +245,13 @@
 
     function initForm() {
       const form = document.getElementById('loginForm');
+      console.log('Login form element:', form);
 
       form?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
+        console.log('Login attempt:', email);
 
         try {
           // 直接调用 API，不依赖模块
@@ -259,6 +261,7 @@
             body: JSON.stringify({ email, password })
           });
           const data = await response.json();
+          console.log('Login response:', data);
 
           if (data.success) {
             // 保存 token
