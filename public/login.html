@@ -245,7 +245,17 @@
 
     function initForm() {
       const form = document.getElementById('loginForm');
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      
       console.log('Login form element:', form);
+
+      // 支持回车键提交
+      passwordInput?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          form?.dispatchEvent(new Event('submit'));
+        }
+      });
 
       form?.addEventListener('submit', async (e) => {
         e.preventDefault();
