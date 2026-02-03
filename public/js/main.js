@@ -577,6 +577,9 @@ function escapeHtml(text) {
 // ==================== Toast通知 ====================
 
 export function showToast(message, type = 'success') {
+  // 暴露到全局
+  window.showToast = showToast;
+  
   const container = document.getElementById('toastContainer');
   if (!container) return;
 
